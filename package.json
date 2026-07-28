@@ -1,0 +1,35 @@
+{
+    "name": "project-template",
+    "description": "UI-only project template for static React apps",
+    "private": true,
+    "packageManager": "pnpm@10.28.2",
+    "engines": {
+        "node": "24.12.0",
+        "pnpm": "10.28.2"
+    },
+    "engineStrict": true,
+    "scripts": {
+        "local-ui": "pnpm --filter @project-template/ui dev",
+
+        "build": "pnpm --recursive --if-present build",
+        "typecheck": "pnpm --recursive --if-present typecheck",
+        "format": "biome check --write .",
+
+        "sso": "aws sso login --profile DRoemhildt19",
+
+        "infra-prepare": "pnpm --filter @project-template/ui build",
+
+        "presynth": "pnpm infra-prepare",
+        "synth": "pnpm --filter @project-template/infra exec cdk synth --profile DRoemhildt19",
+
+        "prediff": "pnpm infra-prepare",
+        "diff": "pnpm --filter @project-template/infra exec cdk diff --profile DRoemhildt19",
+
+        "predeploy": "pnpm infra-prepare",
+        "deploy": "pnpm --filter @project-template/infra exec cdk deploy --profile DRoemhildt19 --require-approval never",
+        "github-action-deploy": "biome check . && pnpm run typecheck && pnpm run build && pnpm --filter @project-template/infra exec cdk deploy --require-approval never"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "2.5.5"
+    }
+}
