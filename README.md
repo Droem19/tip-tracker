@@ -49,6 +49,8 @@ After copying the template, update:
 - `infra/bin/infra.ts` fallback `siteSubdomain`
 - `ui/index.html` page title
 - `ui/src/pages/home.tsx` starter page copy
+- GitHub repository secret `AWS_DEPLOY_ROLE_ARN`
+- AWS IAM GitHub Actions deploy role trust policy for the new repo
 
 ## Deploy
 The CDK stack deploys the built UI from `ui/dist` to `project-template.derek-dev.com` by default.
@@ -71,3 +73,22 @@ The deploy scripts build the UI before running CDK so `ui/dist` exists for the b
 The workflow at `.github/workflows/deploy.yml` deploys on pushes to `main` and can also be run manually.
 
 The workflow installs dependencies with `pnpm install --frozen-lockfile`, then runs `pnpm run github-action-deploy`. That deploy script runs a read-only Biome check, typechecks the workspace, builds the UI, and deploys the CDK stack. Commit `pnpm-lock.yaml` after dependency changes so CI can install reproducibly.
+
+### GitHub OIDC Setup
+Each copied repo needs access to the AWS deploy role used by GitHub Actions.
+
+1. Add a repository secret in GitHub:
+
+	- Name: `AWS_DEPLOY_ROLE_ARN`
+	- Value: the ARN of the IAM role GitHub Actions should assume
+
+2. Update that IAM role's trust policy to allow the new repo on `main`:
+
+	```json
+	"token.actions.githubusercontent.com:sub": [
+		"repo:Droem19/derek-dev-website:ref:refs/heads/main",
+		"repo:Droem19/project-template:ref:refs/heads/main"
+	]
+	```
+
+	Replace `Droem19/project-template` with the copied repo name.
