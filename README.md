@@ -1,11 +1,10 @@
 # Project Template
 
-Barebones starter for a static React site deployed to AWS with CDK. The UI intentionally starts minimal: a Vite React app with Tailwind CSS and a basic not-found route.
+Bare bones starter for a static React site deployed to AWS with CDK. The UI intentionally starts minimal: a Vite React app with Tailwind CSS and a basic not-found fallback.
 
 ## Tech Stack
 - TypeScript
 - React
-- React Router
 - Vite
 - Tailwind CSS
 - AWS CDK
@@ -36,8 +35,7 @@ pnpm run local-ui
 
 ## Common Commands
 ```bash
-pnpm run check        # format, lint, and organize imports
-pnpm run check:ci     # verify formatting/linting without writing changes
+pnpm run format       # format, lint, and organize imports
 pnpm run typecheck    # typecheck all workspace packages
 pnpm run build        # build all workspace packages that define a build script
 ```
@@ -61,18 +59,6 @@ Sign in with AWS SSO:
 pnpm sso
 ```
 
-Review the synthesized stack:
-
-```bash
-pnpm run synth
-```
-
-Review infrastructure changes:
-
-```bash
-pnpm run diff
-```
-
 Deploy:
 
 ```bash
@@ -84,4 +70,4 @@ The deploy scripts build the UI before running CDK so `ui/dist` exists for the b
 ## GitHub Actions Deploy
 The workflow at `.github/workflows/deploy.yml` deploys on pushes to `main` and can also be run manually.
 
-The workflow installs dependencies with `pnpm install --frozen-lockfile`, then runs `pnpm run github-action-deploy`. Commit `pnpm-lock.yaml` after dependency changes so CI can install reproducibly.
+The workflow installs dependencies with `pnpm install --frozen-lockfile`, then runs `pnpm run github-action-deploy`. That deploy script runs a read-only Biome check, typechecks the workspace, builds the UI, and deploys the CDK stack. Commit `pnpm-lock.yaml` after dependency changes so CI can install reproducibly.
