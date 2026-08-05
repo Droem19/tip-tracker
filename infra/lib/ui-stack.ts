@@ -44,8 +44,16 @@ export class UIStack extends cdk.Stack {
             autoDeleteObjects: false,
         });
 
+        const wwwSiteDomain = `www.${props.siteDomain}`;
+        const domainNames = [props.siteDomain, wwwSiteDomain];
+
+        cdk.Tags.of(this).add('Project', this.stackName);
+        cdk.Tags.of(this).add('SiteDomain', props.siteDomain);
+        cdk.Tags.of(this).add('WwwSiteDomain', wwwSiteDomain);
+
         const certificate = new acm.Certificate(this, 'SiteCertificate', {
             domainName: props.siteDomain,
+            subjectAlternativeNames: [wwwSiteDomain],
             validation: acm.CertificateValidation.fromDns(hostedZone),
         });
 
@@ -55,7 +63,7 @@ export class UIStack extends cdk.Stack {
                 viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
             },
-            domainNames: [props.siteDomain],
+            domainNames,
             certificate,
             defaultRootObject: 'index.html',
             errorResponses: [
@@ -76,17 +84,30 @@ export class UIStack extends cdk.Stack {
             enableLogging: true,
         });
 
-        const recordName = props.siteDomain.replace(`.${props.rootDomain}`, '');
+        const primaryRecordName = props.siteDomain === props.rootDomain ? undefined : props.siteDomain.replace(`.${props.rootDomain}`, '');
+        const wwwRecordName = wwwSiteDomain.replace(`.${props.rootDomain}`, '');
 
-        new route53.ARecord(this, 'SiteARecord', {
+        new route53.ARecord(this, 'PrimaryDomainARecord', {
             zone: hostedZone,
-            recordName,
+            recordName: primaryRecordName,
             target: route53.RecordTarget.fromAlias(new route53Targets.CloudFrontTarget(distribution)),
         });
 
-        new route53.AaaaRecord(this, 'SiteAaaaRecord', {
+        new route53.AaaaRecord(this, 'PrimaryDomainAaaaRecord', {
             zone: hostedZone,
-            recordName,
+            recordName: primaryRecordName,
+            target: route53.RecordTarget.fromAlias(new route53Targets.CloudFrontTarget(distribution)),
+        });
+
+        new route53.ARecord(this, 'WwwDomainARecord', {
+            zone: hostedZone,
+            recordName: wwwRecordName,
+            target: route53.RecordTarget.fromAlias(new route53Targets.CloudFrontTarget(distribution)),
+        });
+
+        new route53.AaaaRecord(this, 'WwwDomainAaaaRecord', {
+            zone: hostedZone,
+            recordName: wwwRecordName,
             target: route53.RecordTarget.fromAlias(new route53Targets.CloudFrontTarget(distribution)),
         });
 
@@ -105,6 +126,11 @@ export class UIStack extends cdk.Stack {
         new cdk.CfnOutput(this, 'SiteDomainOutput', {
             value: `https://${props.siteDomain}`,
             description: 'Static app URL',
+        });
+
+        new cdk.CfnOutput(this, 'WwwSiteDomainOutput', {
+            value: `https://${wwwSiteDomain}`,
+            description: 'Static app www URL',
         });
 
         new cdk.CfnOutput(this, 'DistributionIdOutput', {
