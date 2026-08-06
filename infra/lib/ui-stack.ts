@@ -84,7 +84,8 @@ export class UIStack extends cdk.Stack {
             enableLogging: true,
         });
 
-        const primaryRecordName = props.siteDomain === props.rootDomain ? undefined : props.siteDomain.replace(`.${props.rootDomain}`, '');
+        const primaryRecordName =
+            props.siteDomain === props.rootDomain ? undefined : props.siteDomain.replace(`.${props.rootDomain}`, '');
         const wwwRecordName = wwwSiteDomain.replace(`.${props.rootDomain}`, '');
 
         new route53.ARecord(this, 'PrimaryDomainARecord', {

@@ -1,6 +1,6 @@
 # Project Template
 
-Bare bones starter for a static React site deployed to AWS with CDK. The UI intentionally starts minimal: a Vite React app with Tailwind CSS and a basic not-found fallback.
+Starter template for a React app with login, a typed Hono API, and AWS infrastructure managed with CDK. The UI includes a simple API-backed auth flow and a protected `/app` route.
 
 ## Tech Stack
 
@@ -8,14 +8,17 @@ Bare bones starter for a static React site deployed to AWS with CDK. The UI inte
 - React
 - Vite
 - Tailwind
+- Hono
 - AWS CDK
 - Biome
 
 ## Repo Structure
 
 - `ui` - Vite React app
-- `ui/src/pages` - Route-level pages for home, projects, and not found states
-- `infra` - CDK app and stack for static website hosting
+- `ui/src/pages` - Route-level pages for login, sign-up, forgot password, app, and not found states
+- `ui/src/auth` - Client-side auth provider and typed Hono API client
+- `api` - Hono serverless API
+- `infra` - CDK app and stacks for hosting the UI, Cognito, HTTP API, and Lambda
 - `.github/workflows/deploy.yml` - Production deploy workflow for pushes to `main` and manual dispatches
 
 ## Getting Started (Local Development)
@@ -39,11 +42,51 @@ Run the local UI dev server:
 pnpm run local-ui
 ```
 
+Run the local API dev server:
+
+```bash
+pnpm run local-api
+```
+
+Run the UI and API together:
+
+```bash
+pnpm run local
+```
+
+Local defaults:
+
+- UI: `http://localhost:5173`
+- API: `http://localhost:8787`
+- The UI uses `VITE_API_URL` when set, otherwise it calls the local API URL.
+
+For local development, auth routes return a local dev session that the UI stores in `localStorage`. The UI still calls the API for login, sign-up, forgot password, and logout.
+
+## API and Auth
+
+The Hono app lives in `api/src/auth.ts` and exposes:
+
+- `GET /health`
+- `POST /auth/login`
+- `POST /auth/signup`
+- `POST /auth/forgot-password`
+- `POST /auth/logout`
+- `GET /me`
+
+The UI uses Hono's typed client from `hono/client` in `ui/src/auth/api.ts`. The API package exports the route type, so UI calls like `client.auth.login.$post(...)` are checked against the actual Hono routes.
+
+The `/app` UI route is protected by the local auth provider. If a user is not signed in, they are routed back to `/`.
+
 ## Infrastructure
 
-The CDK app lives in `infra` and defines the `project-template-ui` stack. It deploys the built UI from `ui/dist` to `project-template.derek-dev.com` by default.
+The CDK app lives in `infra` and defines two stacks:
 
-The stack creates:
+- `project-template-with-login-ui`
+- `project-template-with-login-api`
+
+The UI stack deploys the built UI from `ui/dist` to `project-template-with-login.derek-dev.com` by default.
+
+The UI stack creates:
 
 - Private S3 bucket for static site assets
 - CloudFront distribution with Origin Access Control
@@ -51,6 +94,15 @@ The stack creates:
 - Route53 A and AAAA alias records for both domains
 - SPA fallback responses that serve `index.html` for CloudFront 403 and 404 responses
 - Bucket deployment with CloudFront invalidation
+
+The API stack creates:
+
+- Cognito user pool
+- Cognito user pool client
+- HTTP API Gateway
+- Cognito user pool authorizer for protected API routes
+- `project-template-with-login-auth` Lambda backed by the Hono API
+- Lambda integration for API Gateway
 
 ## Deploying the app
 
@@ -64,6 +116,12 @@ Preview the stack:
 
 ```bash
 pnpm run diff
+```
+
+Synthesize the stacks:
+
+```bash
+pnpm run synth
 ```
 
 Deploy the stack:
@@ -89,10 +147,16 @@ After copying the template, update:
 - Root `package.json` name
 - `siteSubdomain` name in `infra/cdk.json`
 - `infra/bin/infra.ts` stack ID and stack name
+- Cognito, API, and Lambda names in `infra/lib/api-stack.ts`
 - `ui/index.html` page title
-- `ui/src/pages/home.tsx` starter page copy
+- Login/app page copy in `ui/src/pages`
 - GitHub repository secret `AWS_DEPLOY_ROLE_ARN`
 - AWS IAM GitHub Actions deploy role trust policy for the new repo
+- Create a new GitHub repository, then set the new project's URL
+
+```bash
+git remote set-url origin https://github.com/Droem19/<new-repo-name>.git
+```
 
 ### GitHub OIDC Setup
 Each copied repo needs access to the AWS deploy role used by GitHub Actions.
@@ -107,8 +171,8 @@ Each copied repo needs access to the AWS deploy role used by GitHub Actions.
 	```json
 	"token.actions.githubusercontent.com:sub": [
 		"repo:Droem19/derek-dev-website:ref:refs/heads/main",
-		"repo:Droem19/project-template:ref:refs/heads/main"
+		"repo:Droem19/project-template-with-login:ref:refs/heads/main"
 	]
 	```
 
-	Replace `Droem19/project-template` with the copied repo name.
+	Replace `Droem19/project-template-with-login` with the copied repo name.

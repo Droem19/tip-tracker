@@ -1,6 +1,6 @@
 {
-    "name": "project-template",
-    "description": "UI-only project template for static React apps",
+    "name": "project-template-with-login",
+    "description": "Full Stack project template for React apps with login and authentication",
     "private": true,
     "packageManager": "pnpm@10.28.2",
     "engines": {
@@ -9,6 +9,8 @@
     },
     "engineStrict": true,
     "scripts": {
+        "local": "pnpm --parallel --filter api --filter ui dev",
+        "local-api": "pnpm --filter api dev",
         "local-ui": "pnpm --filter ui dev",
 
         "build": "pnpm --recursive --if-present build",
@@ -30,6 +32,7 @@
         "github-action-deploy": "biome check . && pnpm run typecheck && pnpm run build && pnpm --filter infra exec cdk deploy --require-approval never"
     },
     "devDependencies": {
-        "@biomejs/biome": "2.5.5"
+        "@biomejs/biome": "2.5.5",
+        "esbuild": "^0.27.2"
     }
 }

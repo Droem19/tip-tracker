@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 
+import { APIStack } from '../lib/api-stack.js';
 import { UIStack } from '../lib/ui-stack.js';
 
 const app = new cdk.App();
@@ -19,13 +20,22 @@ const siteSubdomain = requiredContext('siteSubdomain', { allowEmpty: true });
 const hostedZoneId = requiredContext('hostedZoneId');
 const siteDomain = siteSubdomain.length > 0 ? `${siteSubdomain}.${rootDomain}` : rootDomain;
 
-new UIStack(app, 'project-template-ui', {
+new UIStack(app, 'project-template-with-login-ui', {
     env: {
         account: process.env.CDK_DEFAULT_ACCOUNT,
         region: process.env.CDK_DEFAULT_REGION ?? 'us-east-1',
     },
-    stackName: 'project-template-ui',
+    stackName: 'project-template-with-login-ui',
     rootDomain,
     hostedZoneId,
+    siteDomain,
+});
+
+new APIStack(app, 'project-template-with-login-api', {
+    env: {
+        account: process.env.CDK_DEFAULT_ACCOUNT,
+        region: process.env.CDK_DEFAULT_REGION ?? 'us-east-1',
+    },
+    stackName: 'project-template-with-login-api',
     siteDomain,
 });
