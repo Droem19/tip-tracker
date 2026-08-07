@@ -27,7 +27,7 @@ export function SignUpPage() {
 
         try {
             await signUp(email, password);
-            navigate(`/verify?email=${encodeURIComponent(email)}`, { replace: true });
+            navigate(`/verify?email=${encodeURIComponent(email)}`, { replace: true, state: { password } });
         } catch (requestError) {
             setError(requestError instanceof Error ? requestError.message : 'Unable to create your account.');
         } finally {

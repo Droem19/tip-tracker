@@ -69,11 +69,39 @@ export class UIStack extends cdk.Stack {
             originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
         };
 
+        const spaRewriteCode = [
+            'function handler(event) {',
+            '    var request = event.request;',
+            '    var uri = request.uri;',
+            '',
+            "    if (uri === '/favicon.ico') {",
+            "        request.uri = '/favicon.svg';",
+            '        return request;',
+            '    }',
+            '',
+            "    if (uri !== '/' && uri.indexOf('.') === -1) {",
+            "        request.uri = '/index.html';",
+            '    }',
+            '',
+            '    return request;',
+            '}',
+        ].join('\n');
+
+        const spaRewriteFunction = new cloudfront.Function(this, 'SpaRewriteFunction', {
+            code: cloudfront.FunctionCode.fromInline(spaRewriteCode),
+        });
+
         const distribution = new cloudfront.Distribution(this, 'Distribution', {
             defaultBehavior: {
                 origin: origins.S3BucketOrigin.withOriginAccessControl(siteBucket),
                 viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+                functionAssociations: [
+                    {
+                        function: spaRewriteFunction,
+                        eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+                    },
+                ],
             },
             additionalBehaviors: {
                 'auth/*': apiBehavior,
@@ -83,20 +111,6 @@ export class UIStack extends cdk.Stack {
             domainNames,
             certificate,
             defaultRootObject: 'index.html',
-            errorResponses: [
-                {
-                    httpStatus: 403,
-                    responseHttpStatus: 200,
-                    responsePagePath: '/index.html',
-                    ttl: cdk.Duration.minutes(5),
-                },
-                {
-                    httpStatus: 404,
-                    responseHttpStatus: 200,
-                    responsePagePath: '/index.html',
-                    ttl: cdk.Duration.minutes(5),
-                },
-            ],
             minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
             enableLogging: true,
         });

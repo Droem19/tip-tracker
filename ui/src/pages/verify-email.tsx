@@ -1,11 +1,19 @@
 import { type SyntheticEvent, useState } from 'react';
-import { Link, Navigate, useSearchParams } from 'react-router';
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router';
 
 import { useAuth } from '../auth/auth-context';
 
+type VerifyLocationState = {
+    password?: string;
+};
+
 export function VerifyEmailPage() {
-    const { confirmSignUp, resendCode, user } = useAuth();
+    const { confirmSignUp, login, resendCode, user } = useAuth();
+    const location = useLocation();
+    const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+    const locationState = location.state as VerifyLocationState | null;
+    const password = typeof locationState?.password === 'string' ? locationState.password : undefined;
     const [email, setEmail] = useState(searchParams.get('email') ?? '');
     const [code, setCode] = useState('');
     const [error, setError] = useState<string | null>(null);
@@ -23,7 +31,13 @@ export function VerifyEmailPage() {
 
         try {
             const responseMessage = await confirmSignUp(email, code);
-            setMessage(responseMessage);
+            if (password) {
+                await login(email, password);
+                navigate('/app', { replace: true });
+                return;
+            }
+
+            navigate('/', { replace: true, state: { message: responseMessage } });
         } catch (requestError) {
             setError(requestError instanceof Error ? requestError.message : 'Unable to verify your account.');
         } finally {

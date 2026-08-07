@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Navigate } from 'react-router';
+import { Navigate, useNavigate } from 'react-router';
 
 import { useAuth } from '../auth/auth-context';
 
 export function AppPage() {
     const { logout, user } = useAuth();
+    const navigate = useNavigate();
     const [isSigningOut, setIsSigningOut] = useState(false);
 
     if (!user) return <Navigate to="/" replace />;
@@ -12,6 +13,7 @@ export function AppPage() {
     const handleSignOut = async () => {
         setIsSigningOut(true);
         await logout();
+        navigate('/', { replace: true });
     };
 
     return (

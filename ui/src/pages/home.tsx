@@ -1,14 +1,21 @@
 import { type SyntheticEvent, useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router';
 
 import { useAuth } from '../auth/auth-context';
 
+type HomeLocationState = {
+    message?: string;
+};
+
 export function HomePage() {
     const { login, user } = useAuth();
+    const location = useLocation();
     const navigate = useNavigate();
+    const locationState = location.state as HomeLocationState | null;
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [message, setMessage] = useState(typeof locationState?.message === 'string' ? locationState.message : null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     if (user) return <Navigate to="/app" replace />;
@@ -16,6 +23,7 @@ export function HomePage() {
     const handleSubmit = async (event: SyntheticEvent<HTMLFormElement, SubmitEvent>) => {
         event.preventDefault();
         setError(null);
+        setMessage(null);
         setIsSubmitting(true);
 
         try {
@@ -25,7 +33,7 @@ export function HomePage() {
             const message = requestError instanceof Error ? requestError.message : 'Unable to sign in.';
 
             if (message.toLowerCase().includes('verify')) {
-                navigate(`/verify?email=${encodeURIComponent(email)}`);
+                navigate(`/verify?email=${encodeURIComponent(email)}`, { state: { password } });
                 return;
             }
 
@@ -67,6 +75,7 @@ export function HomePage() {
                     </label>
 
                     {error ? <p className="text-sm font-medium text-red-700">{error}</p> : null}
+                    {message ? <p className="text-sm font-medium text-teal-700">{message}</p> : null}
 
                     <button
                         className="h-11 w-full rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"

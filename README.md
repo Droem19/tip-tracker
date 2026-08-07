@@ -105,9 +105,9 @@ The UI stack creates:
 - Private S3 bucket for static site assets
 - CloudFront distribution with Origin Access Control
 - CloudFront proxy behaviors for `/auth/*`, `/me`, and `/health` so the deployed UI calls the API through the same site origin
+- CloudFront Function SPA routing for extensionless UI paths like `/verify`, without rewriting API error responses
 - ACM certificate for the primary domain and `www` domain
 - Route53 A and AAAA alias records for both domains
-- SPA fallback responses that serve `index.html` for CloudFront 403 and 404 responses
 - Bucket deployment with CloudFront invalidation
 
 The API stack creates:
