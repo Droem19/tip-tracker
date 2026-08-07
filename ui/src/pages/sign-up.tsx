@@ -1,26 +1,33 @@
-import { type FormEvent, useState } from 'react';
+import { type SyntheticEvent, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router';
 
 import { useAuth } from '../auth/auth-context';
 
 export function SignUpPage() {
-    const { session, signUp } = useAuth();
+    const { signUp, user } = useAuth();
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    if (session) return <Navigate to="/app" replace />;
+    if (user) return <Navigate to="/app" replace />;
 
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: SyntheticEvent<HTMLFormElement, SubmitEvent>) => {
         event.preventDefault();
         setError(null);
         setIsSubmitting(true);
 
+        if (password !== confirmPassword) {
+            setError('Passwords do not match.');
+            setIsSubmitting(false);
+            return;
+        }
+
         try {
             await signUp(email, password);
-            navigate('/app', { replace: true });
+            navigate(`/verify?email=${encodeURIComponent(email)}`, { replace: true });
         } catch (requestError) {
             setError(requestError instanceof Error ? requestError.message : 'Unable to create your account.');
         } finally {
@@ -56,6 +63,18 @@ export function SignUpPage() {
                             type="password"
                             value={password}
                             onChange={(event) => setPassword(event.target.value)}
+                        />
+                    </label>
+
+                    <label className="block text-sm font-medium text-zinc-700">
+                        Confirm password
+                        <input
+                            className="mt-2 h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-base outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-700/10"
+                            autoComplete="new-password"
+                            name="confirmPassword"
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(event) => setConfirmPassword(event.target.value)}
                         />
                     </label>
 

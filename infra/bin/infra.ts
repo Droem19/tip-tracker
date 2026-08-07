@@ -20,22 +20,23 @@ const siteSubdomain = requiredContext('siteSubdomain', { allowEmpty: true });
 const hostedZoneId = requiredContext('hostedZoneId');
 const siteDomain = siteSubdomain.length > 0 ? `${siteSubdomain}.${rootDomain}` : rootDomain;
 
+const apiStack = new APIStack(app, 'project-template-with-login-api', {
+    env: {
+        account: process.env.CDK_DEFAULT_ACCOUNT,
+        region: process.env.CDK_DEFAULT_REGION ?? 'us-east-1',
+    },
+    stackName: 'project-template-with-login-api',
+    siteDomain,
+});
+
 new UIStack(app, 'project-template-with-login-ui', {
     env: {
         account: process.env.CDK_DEFAULT_ACCOUNT,
         region: process.env.CDK_DEFAULT_REGION ?? 'us-east-1',
     },
     stackName: 'project-template-with-login-ui',
+    apiEndpoint: apiStack.api.apiEndpoint,
     rootDomain,
     hostedZoneId,
-    siteDomain,
-});
-
-new APIStack(app, 'project-template-with-login-api', {
-    env: {
-        account: process.env.CDK_DEFAULT_ACCOUNT,
-        region: process.env.CDK_DEFAULT_REGION ?? 'us-east-1',
-    },
-    stackName: 'project-template-with-login-api',
     siteDomain,
 });

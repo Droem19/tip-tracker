@@ -1,62 +1,69 @@
-import { createContext, type ReactNode, use, useEffect, useState } from 'react';
+import { createContext, type ReactNode, use, useCallback, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router';
 
-import { type AuthSession, authApi } from './api';
-
-const storageKey = 'project-template-with-login:session';
+import { type AuthUser, authApi } from './api';
 
 type AuthContextValue = {
-    session: AuthSession | null;
+    user: AuthUser | null;
     login: (email: string, password: string) => Promise<void>;
-    signUp: (email: string, password: string) => Promise<void>;
+    signUp: (email: string, password: string) => Promise<string>;
+    confirmSignUp: (email: string, code: string) => Promise<string>;
+    resendCode: (email: string) => Promise<string>;
     forgotPassword: (email: string) => Promise<string>;
+    confirmForgotPassword: (email: string, code: string, password: string) => Promise<string>;
+    refreshUser: () => Promise<boolean>;
     logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const readStoredSession = () => {
-    const storedSession = window.localStorage.getItem(storageKey);
-
-    if (!storedSession) return null;
-
-    try {
-        return JSON.parse(storedSession) as AuthSession;
-    } catch {
-        window.localStorage.removeItem(storageKey);
-        return null;
-    }
-};
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [session, setSession] = useState<AuthSession | null>(() => readStoredSession());
+    const [user, setUser] = useState<AuthUser | null>(null);
 
-    useEffect(() => {
-        if (session) {
-            window.localStorage.setItem(storageKey, JSON.stringify(session));
-            return;
+    const refreshUser = useCallback(async () => {
+        try {
+            const response = await authApi.me();
+            setUser(response.user);
+            return true;
+        } catch {
+            setUser(null);
+            return false;
         }
-
-        window.localStorage.removeItem(storageKey);
-    }, [session]);
+    }, []);
 
     const value: AuthContextValue = {
-        session,
+        user,
         login: async (email, password) => {
             const response = await authApi.login(email, password);
-            setSession(response.session);
+            setUser(response.user);
         },
         signUp: async (email, password) => {
             const response = await authApi.signUp(email, password);
-            setSession(response.session);
+            return response.message;
+        },
+        confirmSignUp: async (email, code) => {
+            const response = await authApi.confirmSignUp(email, code);
+            return response.message;
+        },
+        resendCode: async (email) => {
+            const response = await authApi.resendCode(email);
+            return response.message;
         },
         forgotPassword: async (email) => {
             const response = await authApi.forgotPassword(email);
             return response.message;
         },
+        confirmForgotPassword: async (email, code, password) => {
+            const response = await authApi.confirmForgotPassword(email, code, password);
+            return response.message;
+        },
+        refreshUser,
         logout: async () => {
-            await authApi.logout();
-            setSession(null);
+            try {
+                await authApi.logout();
+            } finally {
+                setUser(null);
+            }
         },
     };
 
@@ -72,10 +79,33 @@ export function useAuth() {
 }
 
 export function RequireAuth({ children }: { children: ReactNode }) {
-    const { session } = useAuth();
+    const { refreshUser, user } = useAuth();
     const location = useLocation();
+    const [hasCheckedSession, setHasCheckedSession] = useState(false);
 
-    if (!session) {
+    useEffect(() => {
+        if (user || hasCheckedSession) return;
+
+        let cancelled = false;
+
+        refreshUser().finally(() => {
+            if (!cancelled) setHasCheckedSession(true);
+        });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [hasCheckedSession, refreshUser, user]);
+
+    if (!user && !hasCheckedSession) {
+        return (
+            <main className="grid min-h-svh place-items-center bg-stone-50 px-6 py-10 text-zinc-950">
+                <p className="text-sm font-medium text-zinc-500">Checking your session...</p>
+            </main>
+        );
+    }
+
+    if (!user) {
         return <Navigate to="/" replace state={{ from: location.pathname }} />;
     }
 

@@ -11,6 +11,11 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# local environment files
+.env
+.env.*
+!.env.example
+
 # editor directories and files
 .idea
 *.suo

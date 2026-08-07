@@ -25,11 +25,11 @@
         "synth": "pnpm --filter infra exec cdk synth --profile DRoemhildt19",
 
         "prediff": "pnpm infra-prepare",
-        "diff": "pnpm --filter infra exec cdk diff --profile DRoemhildt19",
+        "diff": "pnpm --filter infra exec cdk diff project-template-with-login-api project-template-with-login-ui --profile DRoemhildt19",
 
         "predeploy": "pnpm infra-prepare",
-        "deploy": "pnpm --filter infra exec cdk deploy --profile DRoemhildt19 --require-approval never",
-        "github-action-deploy": "biome check . && pnpm run typecheck && pnpm run build && pnpm --filter infra exec cdk deploy --require-approval never"
+        "deploy": "pnpm --filter infra exec cdk deploy project-template-with-login-api project-template-with-login-ui --profile DRoemhildt19 --require-approval never",
+        "github-action-deploy": "biome check . && pnpm run typecheck && pnpm run build && pnpm --filter infra exec cdk deploy project-template-with-login-api project-template-with-login-ui --require-approval never"
     },
     "devDependencies": {
         "@biomejs/biome": "2.5.5",

@@ -1,6 +1,6 @@
 # Project Template
 
-Starter template for a React app with login, a typed Hono API, and AWS infrastructure managed with CDK. The UI includes a simple API-backed auth flow and a protected `/app` route.
+Starter template for a React app with Cognito-backed login, a typed Hono API, and AWS infrastructure managed with CDK. The API owns auth and stores Cognito tokens in HTTP-only cookies, while the UI uses `/me` to protect the `/app` route.
 
 ## Tech Stack
 
@@ -60,22 +60,36 @@ Local defaults:
 - API: `http://localhost:8787`
 - The UI uses `VITE_API_URL` when set, otherwise it calls the local API URL.
 
-For local development, auth routes return a local dev session that the UI stores in `localStorage`. The UI still calls the API for login, sign-up, forgot password, and logout.
+For local development, point the API at a real Cognito user pool before running `pnpm run local-api`. The local API automatically loads `api/.env` when it exists:
+
+```powershell
+Copy-Item api/.env.example api/.env
+```
+
+Then fill in `USER_POOL_ID`, `USER_POOL_CLIENT_ID`, and `USER_POOL_REGION` in `api/.env`. You can get those values from the CDK outputs after deploying the API stack.
+
+The API sets HTTP-only cookies for Cognito access, ID, and refresh tokens. The UI does not store auth tokens in `localStorage`.
 
 ## API and Auth
 
 The Hono app lives in `api/src/auth.ts` and exposes:
 
 - `GET /health`
-- `POST /auth/login`
 - `POST /auth/signup`
+- `POST /auth/confirm-signup`
+- `POST /auth/resend-code`
+- `POST /auth/login`
+- `POST /auth/refresh`
 - `POST /auth/forgot-password`
+- `POST /auth/confirm-forgot-password`
 - `POST /auth/logout`
 - `GET /me`
 
-The UI uses Hono's typed client from `hono/client` in `ui/src/auth/api.ts`. The API package exports the route type, so UI calls like `client.auth.login.$post(...)` are checked against the actual Hono routes.
+The UI uses Hono's typed client from `hono/client` in `ui/src/auth/api.ts`. The API package exports the route type, so UI calls like `client.auth.login.$post(...)` are checked against the actual Hono routes. The client sends cookies with each request and retries once through `/auth/refresh` when an authenticated request returns `401`.
 
-The `/app` UI route is protected by the local auth provider. If a user is not signed in, they are routed back to `/`.
+The `/app` UI route is protected by the auth provider. If `/me` cannot resolve a signed-in user, the user is routed back to `/`.
+
+This template uses self-signup with a user-chosen password and email verification. It does not use Cognito admin invitations, temporary passwords, or `NEW_PASSWORD_REQUIRED` challenge handling.
 
 ## Infrastructure
 
@@ -90,6 +104,7 @@ The UI stack creates:
 
 - Private S3 bucket for static site assets
 - CloudFront distribution with Origin Access Control
+- CloudFront proxy behaviors for `/auth/*`, `/me`, and `/health` so the deployed UI calls the API through the same site origin
 - ACM certificate for the primary domain and `www` domain
 - Route53 A and AAAA alias records for both domains
 - SPA fallback responses that serve `index.html` for CloudFront 403 and 404 responses
@@ -100,7 +115,6 @@ The API stack creates:
 - Cognito user pool
 - Cognito user pool client
 - HTTP API Gateway
-- Cognito user pool authorizer for protected API routes
 - `project-template-with-login-auth` Lambda backed by the Hono API
 - Lambda integration for API Gateway
 

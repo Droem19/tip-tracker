@@ -1,19 +1,19 @@
-import { type FormEvent, useState } from 'react';
+import { type SyntheticEvent, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router';
 
 import { useAuth } from '../auth/auth-context';
 
 export function HomePage() {
-    const { login, session } = useAuth();
+    const { login, user } = useAuth();
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    if (session) return <Navigate to="/app" replace />;
+    if (user) return <Navigate to="/app" replace />;
 
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: SyntheticEvent<HTMLFormElement, SubmitEvent>) => {
         event.preventDefault();
         setError(null);
         setIsSubmitting(true);
@@ -22,7 +22,14 @@ export function HomePage() {
             await login(email, password);
             navigate('/app', { replace: true });
         } catch (requestError) {
-            setError(requestError instanceof Error ? requestError.message : 'Unable to sign in.');
+            const message = requestError instanceof Error ? requestError.message : 'Unable to sign in.';
+
+            if (message.toLowerCase().includes('verify')) {
+                navigate(`/verify?email=${encodeURIComponent(email)}`);
+                return;
+            }
+
+            setError(message);
         } finally {
             setIsSubmitting(false);
         }
@@ -75,13 +82,13 @@ export function HomePage() {
                         className="font-medium text-zinc-600 underline underline-offset-4 hover:text-zinc-950"
                         to="/forgot-password"
                     >
-                        Forgot Password
+                        Forgot password
                     </Link>
                     <Link
                         className="font-medium text-zinc-600 underline underline-offset-4 hover:text-zinc-950"
                         to="/signup"
                     >
-                        Sign-Up
+                        Sign up
                     </Link>
                 </div>
             </section>

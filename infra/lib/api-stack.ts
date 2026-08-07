@@ -2,11 +2,9 @@ import * as cdk from 'aws-cdk-lib';
 import {
     aws_apigatewayv2 as apigatewayv2,
     aws_cognito as cognito,
-    aws_iam as iam,
     aws_lambda as lambda,
     aws_lambda_nodejs as lambdaNodejs,
 } from 'aws-cdk-lib';
-import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import type { Construct } from 'constructs';
 
@@ -18,6 +16,8 @@ type APIStackProps = cdk.StackProps & {
 };
 
 export class APIStack extends cdk.Stack {
+    public readonly api: apigatewayv2.HttpApi;
+
     constructor(scope: Construct, id: string, props: APIStackProps) {
         super(scope, id, props);
 
@@ -30,7 +30,7 @@ export class APIStack extends cdk.Stack {
             signInCaseSensitive: false,
             selfSignUpEnabled: true,
             autoVerify: {
-                email: false,
+                email: true,
             },
             standardAttributes: {
                 email: {
@@ -58,15 +58,6 @@ export class APIStack extends cdk.Stack {
             mfa: cognito.Mfa.OFF,
             mfaSecondFactor: { sms: false, otp: true },
             email: cognito.UserPoolEmail.withCognito(),
-            userInvitation: {
-                emailSubject: "You're invited to project-template-with-login",
-                emailBody: [
-                    "You've been invited to project-template-with-login.",
-                    'Username: {username}',
-                    'Temporary password: {####}',
-                    "When signing in for the first time with these credentials, you'll be prompted to create a new password.",
-                ].join('\n\n'),
-            },
             userVerification: {
                 emailSubject: 'Verify your project-template-with-login account',
                 emailBody: [
@@ -117,19 +108,18 @@ export class APIStack extends cdk.Stack {
             memorySize: 512,
             timeout: cdk.Duration.seconds(10),
             environment: {
+                ALLOWED_ORIGINS: [
+                    `https://${props.siteDomain}`,
+                    `https://www.${props.siteDomain}`,
+                    'http://localhost:5173',
+                ].join(','),
                 USER_POOL_ID: userPool.userPoolId,
                 USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
+                USER_POOL_REGION: this.region,
             },
         });
 
-        authLambda.addToRolePolicy(
-            new iam.PolicyStatement({
-                actions: ['cognito-idp:AdminCreateUser', 'cognito-idp:AdminGetUser'],
-                resources: [userPool.userPoolArn],
-            })
-        );
-
-        const api = new apigatewayv2.HttpApi(this, 'AuthApi', {
+        this.api = new apigatewayv2.HttpApi(this, 'AuthApi', {
             apiName: 'project-template-with-login-api',
             corsPreflight: {
                 allowHeaders: ['Authorization', 'Content-Type'],
@@ -145,30 +135,21 @@ export class APIStack extends cdk.Stack {
                     `https://www.${props.siteDomain}`,
                     'http://localhost:5173',
                 ],
+                allowCredentials: true,
                 maxAge: cdk.Duration.days(1),
             },
         });
 
         const lambdaIntegration = new HttpLambdaIntegration('AuthLambdaIntegration', authLambda);
-        const apiAuthorizer = new HttpUserPoolAuthorizer('project-template-with-login-api-authorizer', userPool, {
-            userPoolClients: [userPoolClient],
-        });
 
-        api.addRoutes({
+        this.api.addRoutes({
             path: '/{proxy+}',
             methods: [apigatewayv2.HttpMethod.ANY],
             integration: lambdaIntegration,
         });
 
-        api.addRoutes({
-            path: '/me',
-            methods: [apigatewayv2.HttpMethod.GET],
-            integration: lambdaIntegration,
-            authorizer: apiAuthorizer,
-        });
-
         new cdk.CfnOutput(this, 'AuthApiUrlOutput', {
-            value: api.apiEndpoint,
+            value: this.api.apiEndpoint,
             description: 'Auth API URL',
         });
 

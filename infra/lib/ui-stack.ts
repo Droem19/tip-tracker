@@ -14,6 +14,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 type UIStackProps = cdk.StackProps & {
+    apiEndpoint: string;
     rootDomain: string;
     hostedZoneId: string;
     siteDomain: string;
@@ -57,11 +58,27 @@ export class UIStack extends cdk.Stack {
             validation: acm.CertificateValidation.fromDns(hostedZone),
         });
 
+        const apiDomainName = cdk.Fn.select(2, cdk.Fn.split('/', props.apiEndpoint));
+        const apiOrigin = new origins.HttpOrigin(apiDomainName, {
+            protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+        });
+        const apiBehavior: cloudfront.BehaviorOptions = {
+            origin: apiOrigin,
+            allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+            cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+            originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+        };
+
         const distribution = new cloudfront.Distribution(this, 'Distribution', {
             defaultBehavior: {
                 origin: origins.S3BucketOrigin.withOriginAccessControl(siteBucket),
                 viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+            },
+            additionalBehaviors: {
+                'auth/*': apiBehavior,
+                health: apiBehavior,
+                me: apiBehavior,
             },
             domainNames,
             certificate,

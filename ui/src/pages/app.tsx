@@ -4,10 +4,10 @@ import { Navigate } from 'react-router';
 import { useAuth } from '../auth/auth-context';
 
 export function AppPage() {
-    const { logout, session } = useAuth();
+    const { logout, user } = useAuth();
     const [isSigningOut, setIsSigningOut] = useState(false);
 
-    if (!session) return <Navigate to="/" replace />;
+    if (!user) return <Navigate to="/" replace />;
 
     const handleSignOut = async () => {
         setIsSigningOut(true);
@@ -35,11 +35,11 @@ export function AppPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                     <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
                         <p className="text-sm font-medium text-zinc-500">Signed in as</p>
-                        <p className="mt-2 text-lg font-semibold">{session.email}</p>
+                        <p className="mt-2 text-lg font-semibold">{user.email}</p>
                     </section>
                     <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
                         <p className="text-sm font-medium text-zinc-500">Session source</p>
-                        <p className="mt-2 text-lg font-semibold">API-backed local session</p>
+                        <p className="mt-2 text-lg font-semibold">Cognito cookie session</p>
                     </section>
                 </div>
             </section>

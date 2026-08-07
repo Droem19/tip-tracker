@@ -8,6 +8,7 @@ import { ForgotPasswordPage } from './pages/forgot-password';
 import { HomePage } from './pages/home';
 import { NotFoundPage } from './pages/not-found';
 import { SignUpPage } from './pages/sign-up';
+import { VerifyEmailPage } from './pages/verify-email';
 
 import './index.css';
 
@@ -21,6 +22,7 @@ createRoot(rootElement).render(
                 <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/signup" element={<SignUpPage />} />
+                    <Route path="/verify" element={<VerifyEmailPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route
                         path="/app"
