@@ -97,7 +97,7 @@ export class APIStack extends cdk.Stack {
         });
 
         const stackSourceDir = path.dirname(fileURLToPath(import.meta.url));
-        const authLambdaEntry = path.resolve(stackSourceDir, '../../api/src/auth.ts');
+        const authLambdaEntry = path.resolve(stackSourceDir, '../../api/src/lambdas/auth.ts');
 
         const authLambda = new lambdaNodejs.NodejsFunction(this, 'AuthLambda', {
             functionName: 'project-template-with-login-auth',

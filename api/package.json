@@ -3,7 +3,7 @@
     "private": true,
     "version": "0.1.0",
     "type": "module",
-    "types": "./src/auth.ts",
+    "types": "./src/lambdas/auth.ts",
     "scripts": {
         "dev": "tsx watch src/local.ts",
         "typecheck": "tsc --project tsconfig.json --noEmit"

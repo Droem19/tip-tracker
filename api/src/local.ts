@@ -8,7 +8,7 @@ if (existsSync(envPath)) {
     process.loadEnvFile(envPath);
 }
 
-const { app } = await import('./auth.js');
+const { app } = await import('./lambdas/auth.js');
 
 const port = Number.parseInt(process.env.PORT ?? '8787', 10);
 

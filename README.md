@@ -18,6 +18,9 @@ Starter template for a React app with Cognito-backed login, a typed Hono API, an
 - `ui/src/pages` - Route-level pages for login, sign-up, forgot password, app, and not found states
 - `ui/src/auth` - Client-side auth provider and typed Hono API client
 - `api` - Hono serverless API
+- `api/src/lambdas` - Lambda entry points and route wiring
+- `api/src/contracts` - API request/response types and validators
+- `api/src/lib` - Reusable API helpers and Cognito utilities
 - `infra` - CDK app and stacks for hosting the UI, Cognito, HTTP API, and Lambda
 - `.github/workflows/deploy.yml` - Production deploy workflow for pushes to `main` and manual dispatches
 
@@ -26,7 +29,7 @@ Starter template for a React app with Cognito-backed login, a typed Hono API, an
 - Node.js: `24.12.0`
 - pnpm: `10.28.2`
 - AWS CLI configured for deployments
-- AWS SSO access for the `DRoemhildt19` profile
+- AWS SSO access for the `DRoemhildt19` profile used by the current deploy scripts
 
 ## Local Development
 
@@ -70,9 +73,35 @@ Then fill in `USER_POOL_ID`, `USER_POOL_CLIENT_ID`, and `USER_POOL_REGION` in `a
 
 The API sets HTTP-only cookies for Cognito access, ID, and refresh tokens. The UI does not store auth tokens in `localStorage`.
 
+## Quality Checks
+
+Run all package typechecks:
+
+```bash
+pnpm run typecheck
+```
+
+Run Biome linting and formatting checks:
+
+```bash
+pnpm exec biome check .
+```
+
+Apply Biome fixes:
+
+```bash
+pnpm run format
+```
+
+Build every package with a build script:
+
+```bash
+pnpm run build
+```
+
 ## API and Auth
 
-The Hono app lives in `api/src/auth.ts` and exposes:
+The auth Hono app lives in `api/src/lambdas/auth.ts` and exposes:
 
 - `GET /health`
 - `POST /auth/signup`
@@ -97,6 +126,12 @@ The CDK app lives in `infra` and defines two stacks:
 
 - `project-template-with-login-ui`
 - `project-template-with-login-api`
+
+CDK context in `infra/cdk.json` controls the hosted domain:
+
+- `rootDomain` - Route53 hosted zone domain
+- `hostedZoneId` - Route53 hosted zone ID
+- `siteSubdomain` - Subdomain deployed by this template; leave empty to deploy at the root domain
 
 The UI stack deploys the built UI from `ui/dist` to `project-template-with-login.derek-dev.com` by default.
 
@@ -145,25 +180,27 @@ pnpm run deploy
 ```
 
 ## GitHub Actions Deploy
+
 The deploy workflow runs on pushes to the `main` branch and can also be started manually from GitHub Actions.
 
 The workflow:
 
 - Installs pnpm and Node.js
 - Installs dependencies with `pnpm install --frozen-lockfile`
-- Assumes the AWS role from Github's `AWS_DEPLOY_ROLE_ARN` secret
+- Assumes the AWS role from GitHub's `AWS_DEPLOY_ROLE_ARN` secret
 - Runs `pnpm run github-action-deploy`
 - Deploys to `us-east-1`
 
 ## Copying for a New Project
+
 After copying the template, update:
 
-- Root `package.json` name
-- `siteSubdomain` name in `infra/cdk.json`
-- `infra/bin/infra.ts` stack ID and stack name
-- Cognito, API, and Lambda names in `infra/lib/api-stack.ts`
+- Root `package.json` name and description
+- `rootDomain`, `hostedZoneId`, and `siteSubdomain` in `infra/cdk.json`
+- `infra/bin/infra.ts` stack IDs and stack names
+- Cognito, API, Lambda names, and verification email copy in `infra/lib/api-stack.ts`
 - `ui/index.html` page title
-- Login/app page copy in `ui/src/pages`
+- Login, sign-up, verification, forgot-password, and app page copy in `ui/src/pages`
 - GitHub repository secret `AWS_DEPLOY_ROLE_ARN`
 - AWS IAM GitHub Actions deploy role trust policy for the new repo
 - Create a new GitHub repository, then set the new project's URL
