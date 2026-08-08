@@ -3,7 +3,7 @@
     "context": {
         "rootDomain": "derek-dev.com",
         "hostedZoneId": "Z07718413A1OX4SYFMZ5F",
-        "siteSubdomain": "project-template-with-login",
+        "siteSubdomain": "tip-tracker",
         "@aws-cdk/core:defaultCrossStackReferences": "strong",
         "@aws-cdk/aws-cloudfront:defaultSecurityPolicyTLSv1.2_2021": true
     }

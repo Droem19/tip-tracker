@@ -1,4 +1,4 @@
-# Project Template
+# Tip Tracker
 
 Starter template for a React app with Cognito-backed login, a typed Hono API, and AWS infrastructure managed with CDK. The API owns auth and stores Cognito tokens in HTTP-only cookies, while the UI uses `/me` to protect the `/app` route.
 
@@ -81,12 +81,6 @@ Run all package typechecks:
 pnpm run typecheck
 ```
 
-Run Biome linting and formatting checks:
-
-```bash
-pnpm exec biome check .
-```
-
 Apply Biome fixes:
 
 ```bash
@@ -124,8 +118,8 @@ This template uses self-signup with a user-chosen password and email verificatio
 
 The CDK app lives in `infra` and defines two stacks:
 
-- `project-template-with-login-ui`
-- `project-template-with-login-api`
+- `tip-tracker-ui`
+- `tip-tracker-api`
 
 CDK context in `infra/cdk.json` controls the hosted domain:
 
@@ -133,7 +127,7 @@ CDK context in `infra/cdk.json` controls the hosted domain:
 - `hostedZoneId` - Route53 hosted zone ID
 - `siteSubdomain` - Subdomain deployed by this template; leave empty to deploy at the root domain
 
-The UI stack deploys the built UI from `ui/dist` to `project-template-with-login.derek-dev.com` by default.
+The UI stack deploys the built UI from `ui/dist` to `tip-tracker.derek-dev.com` by default.
 
 The UI stack creates:
 
@@ -150,7 +144,7 @@ The API stack creates:
 - Cognito user pool
 - Cognito user pool client
 - HTTP API Gateway
-- `project-template-with-login-auth` Lambda backed by the Hono API
+- `tip-tracker-auth` Lambda backed by the Hono API
 - Lambda integration for API Gateway
 
 ## Deploying the app
@@ -190,40 +184,3 @@ The workflow:
 - Assumes the AWS role from GitHub's `AWS_DEPLOY_ROLE_ARN` secret
 - Runs `pnpm run github-action-deploy`
 - Deploys to `us-east-1`
-
-## Copying for a New Project
-
-After copying the template, update:
-
-- Root `package.json` name and description
-- `rootDomain`, `hostedZoneId`, and `siteSubdomain` in `infra/cdk.json`
-- `infra/bin/infra.ts` stack IDs and stack names
-- Cognito, API, Lambda names, and verification email copy in `infra/lib/api-stack.ts`
-- `ui/index.html` page title
-- Login, sign-up, verification, forgot-password, and app page copy in `ui/src/pages`
-- GitHub repository secret `AWS_DEPLOY_ROLE_ARN`
-- AWS IAM GitHub Actions deploy role trust policy for the new repo
-- Create a new GitHub repository, then set the new project's URL
-
-```bash
-git remote set-url origin https://github.com/Droem19/<new-repo-name>.git
-```
-
-### GitHub OIDC Setup
-Each copied repo needs access to the AWS deploy role used by GitHub Actions.
-
-1. Add a repository secret in GitHub:
-
-	- Name: `AWS_DEPLOY_ROLE_ARN`
-	- Value: the ARN of the IAM role GitHub Actions should assume
-
-2. Update that IAM role's trust policy to allow the new repo on `main`:
-
-	```json
-	"token.actions.githubusercontent.com:sub": [
-		"repo:Droem19/derek-dev-website:ref:refs/heads/main",
-		"repo:Droem19/project-template-with-login:ref:refs/heads/main"
-	]
-	```
-
-	Replace `Droem19/project-template-with-login` with the copied repo name.

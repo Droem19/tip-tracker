@@ -21,7 +21,7 @@ export function AppPage() {
             <section className="mx-auto flex w-full max-w-5xl flex-col gap-8">
                 <header className="flex flex-col gap-4 border-b border-zinc-200 pb-6 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <p className="text-sm font-medium text-teal-700">project-template-with-login</p>
+                        <p className="text-sm font-medium text-teal-700">tip-tracker</p>
                         <h1 className="mt-2 text-3xl font-semibold tracking-tight">App</h1>
                     </div>
                     <button

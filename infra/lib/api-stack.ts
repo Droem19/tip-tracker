@@ -22,7 +22,7 @@ export class APIStack extends cdk.Stack {
         super(scope, id, props);
 
         const userPool = new cognito.UserPool(this, 'UserPool', {
-            userPoolName: 'project-template-with-login-user-pool',
+            userPoolName: 'tip-tracker-user-pool',
             signInAliases: {
                 email: true,
                 username: false,
@@ -59,9 +59,9 @@ export class APIStack extends cdk.Stack {
             mfaSecondFactor: { sms: false, otp: true },
             email: cognito.UserPoolEmail.withCognito(),
             userVerification: {
-                emailSubject: 'Verify your project-template-with-login account',
+                emailSubject: 'Verify your tip-tracker account',
                 emailBody: [
-                    'Your project-template-with-login verification code is {####}',
+                    'Your tip-tracker verification code is {####}',
                     'Enter this code in the app to verify your account.',
                 ].join('\n\n'),
                 emailStyle: cognito.VerificationEmailStyle.CODE,
@@ -72,7 +72,7 @@ export class APIStack extends cdk.Stack {
         });
 
         const userPoolClient = userPool.addClient('WebAppClient', {
-            userPoolClientName: 'project-template-with-login-web-app',
+            userPoolClientName: 'tip-tracker-web-app',
             generateSecret: false,
             authFlows: {
                 userPassword: true,
@@ -100,7 +100,7 @@ export class APIStack extends cdk.Stack {
         const authLambdaEntry = path.resolve(stackSourceDir, '../../api/src/lambdas/auth.ts');
 
         const authLambda = new lambdaNodejs.NodejsFunction(this, 'AuthLambda', {
-            functionName: 'project-template-with-login-auth',
+            functionName: 'tip-tracker-auth',
             entry: authLambdaEntry,
             handler: 'handler',
             runtime: lambda.Runtime.NODEJS_22_X,
@@ -120,7 +120,7 @@ export class APIStack extends cdk.Stack {
         });
 
         this.api = new apigatewayv2.HttpApi(this, 'AuthApi', {
-            apiName: 'project-template-with-login-api',
+            apiName: 'tip-tracker-api',
             corsPreflight: {
                 allowHeaders: ['Authorization', 'Content-Type'],
                 allowMethods: [

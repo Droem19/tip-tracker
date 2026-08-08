@@ -20,21 +20,21 @@ const siteSubdomain = requiredContext('siteSubdomain', { allowEmpty: true });
 const hostedZoneId = requiredContext('hostedZoneId');
 const siteDomain = siteSubdomain.length > 0 ? `${siteSubdomain}.${rootDomain}` : rootDomain;
 
-const apiStack = new APIStack(app, 'project-template-with-login-api', {
+const apiStack = new APIStack(app, 'tip-tracker-api', {
     env: {
         account: process.env.CDK_DEFAULT_ACCOUNT,
         region: process.env.CDK_DEFAULT_REGION ?? 'us-east-1',
     },
-    stackName: 'project-template-with-login-api',
+    stackName: 'tip-tracker-api',
     siteDomain,
 });
 
-new UIStack(app, 'project-template-with-login-ui', {
+new UIStack(app, 'tip-tracker-ui', {
     env: {
         account: process.env.CDK_DEFAULT_ACCOUNT,
         region: process.env.CDK_DEFAULT_REGION ?? 'us-east-1',
     },
-    stackName: 'project-template-with-login-ui',
+    stackName: 'tip-tracker-ui',
     apiEndpoint: apiStack.api.apiEndpoint,
     rootDomain,
     hostedZoneId,

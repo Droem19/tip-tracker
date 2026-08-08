@@ -38,7 +38,7 @@ export function SignUpPage() {
     return (
         <main className="grid min-h-svh place-items-center bg-stone-50 px-6 py-10 text-zinc-950">
             <section className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-                <p className="text-sm font-medium text-teal-700">project-template-with-login</p>
+                <p className="text-sm font-medium text-teal-700">tip-tracker</p>
                 <h1 className="mt-2 text-2xl font-semibold tracking-tight">Create account</h1>
 
                 <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
