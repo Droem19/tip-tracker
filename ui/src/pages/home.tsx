@@ -48,9 +48,8 @@ export function HomePage() {
         <main className="grid min-h-svh place-items-center bg-stone-50 px-6 py-10 text-zinc-950">
             <section className="w-full max-w-xs">
                 <div className="flex justify-center">
-                    <img className="h-14 w-14 rounded-xl shadow-sm" alt="Project Template" src="/favicon.svg" />
+                    <img className="h-14 w-auto rounded-xl shadow-sm" alt="Tip Tracker" src="/banner-logo.png" />
                 </div>
-                <h1 className="mt-6 text-center text-2xl font-semibold tracking-tight">Project Template</h1>
 
                 <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
                     <label className="block text-sm font-medium text-zinc-700">
