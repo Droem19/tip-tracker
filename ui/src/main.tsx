@@ -7,6 +7,7 @@ import { AppPage } from './pages/app';
 import { ForgotPasswordPage } from './pages/forgot-password';
 import { HomePage } from './pages/home';
 import { NotFoundPage } from './pages/not-found';
+import { ReportingPage } from './pages/reporting';
 import { SignUpPage } from './pages/sign-up';
 import { VerifyEmailPage } from './pages/verify-email';
 
@@ -29,6 +30,14 @@ createRoot(rootElement).render(
                         element={
                             <RequireAuth>
                                 <AppPage />
+                            </RequireAuth>
+                        }
+                    />
+                    <Route
+                        path="/reporting"
+                        element={
+                            <RequireAuth>
+                                <ReportingPage />
                             </RequireAuth>
                         }
                     />
