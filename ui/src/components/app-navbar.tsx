@@ -22,7 +22,12 @@ const getDisplayFirstName = (user: AuthUser) => {
     return formatFallbackName(user.email);
 };
 
-export function AppNavbar() {
+type AppNavbarProps = {
+    onPreferencesSelect?: () => void;
+    onProfileSelect?: () => void;
+};
+
+export function AppNavbar({ onPreferencesSelect, onProfileSelect }: AppNavbarProps) {
     const { logout, user } = useAuth();
     const navigate = useNavigate();
     const menuRef = useRef<HTMLDivElement>(null);
@@ -53,8 +58,14 @@ export function AppNavbar() {
         };
     }, [isMenuOpen]);
 
-    const handlePlaceholderClick = () => {
+    const handleProfileClick = () => {
         setIsMenuOpen(false);
+        onProfileSelect?.();
+    };
+
+    const handlePreferencesClick = () => {
+        setIsMenuOpen(false);
+        onPreferencesSelect?.();
     };
 
     const handleLogout = async () => {
@@ -127,7 +138,7 @@ export function AppNavbar() {
                                 className="block w-full px-4 py-2 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 hover:text-zinc-950 focus:bg-zinc-100 focus:text-zinc-950 focus:outline-none"
                                 type="button"
                                 role="menuitem"
-                                onClick={handlePlaceholderClick}
+                                onClick={handleProfileClick}
                             >
                                 Profile
                             </button>
@@ -135,7 +146,7 @@ export function AppNavbar() {
                                 className="block w-full px-4 py-2 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 hover:text-zinc-950 focus:bg-zinc-100 focus:text-zinc-950 focus:outline-none"
                                 type="button"
                                 role="menuitem"
-                                onClick={handlePlaceholderClick}
+                                onClick={handlePreferencesClick}
                             >
                                 Preferences
                             </button>
