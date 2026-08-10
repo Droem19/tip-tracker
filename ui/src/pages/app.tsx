@@ -1,15 +1,23 @@
 import { AppLayout } from '../components/app-layout';
+import { StatCard } from '../components/stat-card';
+
+const summaryStats = [
+    { title: 'Monthly Income', value: '$1450' },
+    { title: 'Tip %', value: '24.2%' },
+    { title: 'Average Hourly', value: '$45.50' },
+];
 
 export function AppPage() {
     return (
         <AppLayout>
-            <section className="mx-auto w-full max-w-6xl">
-                <div className="min-h-[28rem] rounded-lg border border-zinc-200 bg-white p-6 shadow-sm sm:p-8">
-                    <div className="max-w-2xl">
-                        <p className="text-sm font-semibold text-teal-700">Dashboard</p>
-                        <h1 className="mt-3 text-2xl font-semibold text-zinc-950 sm:text-3xl">Tip Tracker</h1>
-                    </div>
+            <section className="mx-auto w-full max-w-5xl space-y-6">
+                <div className="grid gap-4 sm:grid-cols-3">
+                    {summaryStats.map((stat) => (
+                        <StatCard key={stat.title} title={stat.title} value={stat.value} />
+                    ))}
                 </div>
+
+                <div className="min-h-[24rem] rounded-lg border border-zinc-200 bg-white/60" />
             </section>
         </AppLayout>
     );
