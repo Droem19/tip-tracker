@@ -1,6 +1,6 @@
 # Tip Tracker
 
-Starter template for a React app with Cognito-backed login, a typed Hono API, and AWS infrastructure managed with CDK. The API owns auth and stores Cognito tokens in HTTP-only cookies, while the UI uses `/me` to protect the `/app` route.
+Tip Tracker is a React app for tracking tip income, with Cognito-backed login, a typed Hono API, and AWS infrastructure managed with CDK. The API owns auth and stores Cognito tokens in HTTP-only cookies, while the UI uses `/me` to protect authenticated app routes.
 
 ## Tech Stack
 
@@ -15,7 +15,8 @@ Starter template for a React app with Cognito-backed login, a typed Hono API, an
 ## Repo Structure
 
 - `ui` - Vite React app
-- `ui/src/pages` - Route-level pages for login, sign-up, forgot password, app, and not found states
+- `ui/src/pages` - Route-level pages for login, sign-up, forgot password, app, reporting, and not found states
+- `ui/src/components` - Shared app shell components, including the authenticated navbar, footer, modals, and summary cards
 - `ui/src/auth` - Client-side auth provider and typed Hono API client
 - `api` - Hono serverless API
 - `api/src/lambdas` - Lambda entry points and route wiring
@@ -110,7 +111,9 @@ The auth Hono app lives in `api/src/lambdas/auth.ts` and exposes:
 
 The UI uses Hono's typed client from `hono/client` in `ui/src/auth/api.ts`. The API package exports the route type, so UI calls like `client.auth.login.$post(...)` are checked against the actual Hono routes. The client sends cookies with each request and retries once through `/auth/refresh` when an authenticated request returns `401`.
 
-The `/app` UI route is protected by the auth provider. If `/me` cannot resolve a signed-in user, the user is routed back to `/`.
+The `/app` and `/reporting` UI routes are protected by the auth provider. If `/me` cannot resolve a signed-in user, the user is routed back to `/`.
+
+Authenticated pages use a shared app layout with the navbar, main content area, footer, and placeholder Profile/Preferences modals. The Profile and Preferences modals are UI-only for now; persistence for profile fields, preferences, hourly rate, theme, calendar view, and reminders still needs to be wired up.
 
 This template uses self-signup with a user-chosen password and email verification. It does not use Cognito admin invitations, temporary passwords, or `NEW_PASSWORD_REQUIRED` challenge handling.
 
