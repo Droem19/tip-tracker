@@ -33,14 +33,15 @@ export function AppModal({ title, description, children, onClose }: AppModalProp
     }, [onClose]);
 
     return (
-        <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/45 p-4 backdrop-blur-sm"
-            onMouseDown={(event) => {
-                if (event.target === event.currentTarget) onClose();
-            }}
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/45 p-4 backdrop-blur-sm">
+            <button
+                className="absolute inset-0 cursor-default"
+                type="button"
+                aria-label="Close modal"
+                onClick={onClose}
+            />
             <section
-                className="flex max-h-[calc(100svh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-2xl"
+                className="relative flex max-h-[calc(100svh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-2xl"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={titleId}
