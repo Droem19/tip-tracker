@@ -2,6 +2,8 @@ export type AuthUser = {
     sub: string;
     email: string;
     emailVerified: boolean;
+    name?: string;
+    givenName?: string;
 };
 
 export type AuthResponse = {

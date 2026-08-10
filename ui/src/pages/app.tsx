@@ -1,50 +1,30 @@
-import { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router';
+import { Navigate } from 'react-router';
 
 import { useAuth } from '../auth/auth-context';
+import { AppFooter } from '../components/app-footer';
+import { AppNavbar } from '../components/app-navbar';
 
 export function AppPage() {
-    const { logout, user } = useAuth();
-    const navigate = useNavigate();
-    const [isSigningOut, setIsSigningOut] = useState(false);
+    const { user } = useAuth();
 
     if (!user) return <Navigate to="/" replace />;
 
-    const handleSignOut = async () => {
-        setIsSigningOut(true);
-        await logout();
-        navigate('/', { replace: true });
-    };
-
     return (
-        <main className="min-h-svh bg-stone-50 px-6 py-8 text-zinc-950">
-            <section className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-                <header className="flex flex-col gap-4 border-b border-zinc-200 pb-6 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <p className="text-sm font-medium text-teal-700">tip-tracker</p>
-                        <h1 className="mt-2 text-3xl font-semibold tracking-tight">App</h1>
-                    </div>
-                    <button
-                        className="inline-flex h-10 items-center justify-center rounded-md bg-zinc-950 px-4 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
-                        disabled={isSigningOut}
-                        type="button"
-                        onClick={handleSignOut}
-                    >
-                        {isSigningOut ? 'Signing out...' : 'Sign out'}
-                    </button>
-                </header>
+        <div className="flex min-h-svh flex-col bg-stone-50 text-zinc-950">
+            <AppNavbar />
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                    <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-                        <p className="text-sm font-medium text-zinc-500">Signed in as</p>
-                        <p className="mt-2 text-lg font-semibold">{user.email}</p>
-                    </section>
-                    <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-                        <p className="text-sm font-medium text-zinc-500">Session source</p>
-                        <p className="mt-2 text-lg font-semibold">Cognito cookie session</p>
-                    </section>
-                </div>
-            </section>
-        </main>
+            <main className="flex-1 px-4 py-8 sm:px-6 sm:py-10">
+                <section className="mx-auto w-full max-w-6xl">
+                    <div className="min-h-[28rem] rounded-lg border border-zinc-200 bg-white p-6 shadow-sm sm:p-8">
+                        <div className="max-w-2xl">
+                            <p className="text-sm font-semibold text-teal-700">Dashboard</p>
+                            <h1 className="mt-3 text-2xl font-semibold text-zinc-950 sm:text-3xl">Tip Tracker</h1>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <AppFooter />
+        </div>
     );
 }

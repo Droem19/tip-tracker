@@ -106,6 +106,8 @@ const userFromTokens = async (accessToken: string, idToken: string): Promise<Aut
     const accessPayload = await getVerifier(config, 'access').verify(accessToken);
     const idPayload = await getVerifier(config, 'id').verify(idToken);
     const email = typeof idPayload.email === 'string' ? idPayload.email : undefined;
+    const name = typeof idPayload.name === 'string' ? idPayload.name : undefined;
+    const givenName = typeof idPayload.given_name === 'string' ? idPayload.given_name : undefined;
 
     if (!accessPayload.sub || !email) {
         throw new HTTPException(401, { message: 'Unauthorized' });
@@ -115,6 +117,8 @@ const userFromTokens = async (accessToken: string, idToken: string): Promise<Aut
         sub: accessPayload.sub,
         email,
         emailVerified: idPayload.email_verified === true || idPayload.email_verified === 'true',
+        ...(name ? { name } : {}),
+        ...(givenName ? { givenName } : {}),
     };
 };
 

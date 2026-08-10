@@ -47,11 +47,11 @@ export function HomePage() {
     return (
         <main className="grid min-h-svh place-items-center bg-stone-50 px-6 py-10 text-zinc-950">
             <section className="w-full max-w-xs">
-                <div className="flex justify-center">
-                    <img className="h-14 w-auto rounded-xl shadow-sm" alt="Tip Tracker" src="/banner-logo.png" />
+                <div className="relative left-1/2 w-[23rem] max-w-[90vw] -translate-x-1/2">
+                    <img className="h-auto w-full" alt="Tip Tracker" src="/banner-logo.png?v=2" />
                 </div>
 
-                <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
+                <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
                     <label className="block text-sm font-medium text-zinc-700">
                         Email
                         <input
