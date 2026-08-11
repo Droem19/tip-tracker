@@ -1,4 +1,7 @@
+import { useState } from 'react';
+
 import { AppLayout } from '../components/app-layout';
+import { DailyIncomeModal } from '../components/daily-income-modal';
 import { StatCard } from '../components/stat-card';
 import { TipCalendar } from '../components/tip-calendar';
 
@@ -9,6 +12,8 @@ const summaryStats = [
 ];
 
 export function AppPage() {
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
     return (
         <AppLayout>
             <section className="mx-auto w-full max-w-5xl space-y-6">
@@ -18,8 +23,12 @@ export function AppPage() {
                     ))}
                 </div>
 
-                <TipCalendar />
+                <TipCalendar onDayClick={setSelectedDate} />
             </section>
+
+            {selectedDate ? (
+                <DailyIncomeModal selectedDate={selectedDate} onClose={() => setSelectedDate(null)} />
+            ) : null}
         </AppLayout>
     );
 }

@@ -9,6 +9,10 @@ type CalendarCell = {
     isToday: boolean;
 };
 
+type TipCalendarProps = {
+    onDayClick: (date: Date) => void;
+};
+
 const today = new Date();
 
 const isSameDay = (date: Date, comparisonDate: Date) =>
@@ -40,7 +44,7 @@ const getMonthLabel = (date: Date) =>
         year: 'numeric',
     });
 
-export function TipCalendar() {
+export function TipCalendar({ onDayClick }: TipCalendarProps) {
     const [displayedMonth, setDisplayedMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
     const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
     const [draftYear, setDraftYear] = useState(displayedMonth.getFullYear());
@@ -87,6 +91,10 @@ export function TipCalendar() {
     const showNextMonth = () => {
         setDisplayedMonth((currentMonth) => new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
         setIsMonthPickerOpen(false);
+    };
+
+    const handleDayClick = (date: Date) => {
+        onDayClick(new Date(date.getFullYear(), date.getMonth(), date.getDate()));
     };
 
     return (
@@ -221,22 +229,28 @@ export function TipCalendar() {
                 </div>
 
                 <div className="mt-3 grid grid-cols-7 gap-2">
-                    {calendarCells.map((cell) => (
-                        <div
-                            className={[
-                                'min-h-20 rounded-lg border p-2 text-sm font-semibold sm:min-h-24 sm:p-3',
-                                cell.isCurrentMonth
-                                    ? 'border-zinc-200 bg-white text-zinc-700'
-                                    : 'border-transparent bg-transparent',
-                                cell.isToday
-                                    ? 'border-teal-700/40 bg-teal-50 text-teal-800 ring-1 ring-teal-700/15'
-                                    : '',
-                            ].join(' ')}
-                            key={`${cell.date.getFullYear()}-${cell.date.getMonth()}-${cell.date.getDate()}`}
-                        >
-                            {cell.isCurrentMonth ? <span>{cell.date.getDate()}</span> : null}
-                        </div>
-                    ))}
+                    {calendarCells.map((cell) =>
+                        cell.isCurrentMonth ? (
+                            <button
+                                className={[
+                                    'flex min-h-20 cursor-pointer justify-center rounded-lg border border-zinc-200 bg-white p-2 text-sm font-semibold text-zinc-700 transition hover:border-teal-700/30 hover:bg-teal-50/50 focus:outline-none focus:ring-4 focus:ring-teal-700/10 sm:min-h-24 sm:p-3',
+                                    cell.isToday
+                                        ? 'border-teal-700/40 bg-teal-50 text-teal-800 ring-1 ring-teal-700/15'
+                                        : '',
+                                ].join(' ')}
+                                key={`${cell.date.getFullYear()}-${cell.date.getMonth()}-${cell.date.getDate()}`}
+                                type="button"
+                                onClick={() => handleDayClick(cell.date)}
+                            >
+                                <span>{cell.date.getDate()}</span>
+                            </button>
+                        ) : (
+                            <div
+                                className="min-h-20 rounded-lg border border-transparent bg-transparent p-2 sm:min-h-24 sm:p-3"
+                                key={`${cell.date.getFullYear()}-${cell.date.getMonth()}-${cell.date.getDate()}`}
+                            />
+                        )
+                    )}
                 </div>
             </div>
         </section>
