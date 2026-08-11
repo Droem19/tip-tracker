@@ -1,5 +1,6 @@
 import { AppLayout } from '../components/app-layout';
 import { StatCard } from '../components/stat-card';
+import { TipCalendar } from '../components/tip-calendar';
 
 const summaryStats = [
     { title: 'Monthly Income', value: '$1450' },
@@ -17,7 +18,7 @@ export function AppPage() {
                     ))}
                 </div>
 
-                <div className="min-h-[24rem] rounded-lg border border-zinc-200 bg-white/60" />
+                <TipCalendar />
             </section>
         </AppLayout>
     );
