@@ -236,49 +236,77 @@ export function TipCalendar({
             </div>
 
             <div className="p-3 sm:p-5">
-                <div className="grid grid-cols-7 border-b border-zinc-200 pb-2">
-                    {weekdayLabels.map((weekday) => (
-                        <div className="text-center text-xs font-semibold uppercase text-zinc-500" key={weekday}>
-                            {weekday}
+                <div className="relative">
+                    <div
+                        className={[
+                            'transition duration-200',
+                            isLoading ? 'pointer-events-none select-none blur-[2px] opacity-60' : '',
+                        ].join(' ')}
+                    >
+                        <div className="grid grid-cols-7 border-b border-zinc-200 pb-2">
+                            {weekdayLabels.map((weekday) => (
+                                <div
+                                    className="text-center text-xs font-semibold uppercase text-zinc-500"
+                                    key={weekday}
+                                >
+                                    {weekday}
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
 
-                <div className="mt-3 grid grid-cols-7 gap-2">
-                    {calendarCells.map((cell) => {
-                        const dateKey = formatLocalDateKey(cell.date);
-                        const entry = entriesByDate[dateKey];
+                        <div className="mt-3 grid grid-cols-7 gap-2">
+                            {calendarCells.map((cell) => {
+                                const dateKey = formatLocalDateKey(cell.date);
+                                const entry = entriesByDate[dateKey];
 
-                        return cell.isCurrentMonth ? (
-                            <button
-                                className={[
-                                    'flex min-h-20 cursor-pointer flex-col items-center justify-start gap-1 rounded-lg border border-zinc-200 bg-white p-2 text-sm font-semibold text-zinc-700 transition hover:border-teal-700/30 hover:bg-teal-50/50 focus:outline-none focus:ring-4 focus:ring-teal-700/10 sm:min-h-24 sm:p-3',
-                                    cell.isToday
-                                        ? 'border-teal-700/40 bg-teal-50 text-teal-800 ring-1 ring-teal-700/15'
-                                        : '',
-                                ].join(' ')}
-                                key={dateKey}
-                                type="button"
-                                onClick={() => handleDayClick(cell.date)}
-                            >
-                                <span>{cell.date.getDate()}</span>
-                                {entry ? (
-                                    <span className="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-bold text-teal-700 ring-1 ring-teal-700/10">
-                                        {formatTipAmount(entry.tipsEarned)}
-                                    </span>
-                                ) : null}
-                            </button>
-                        ) : (
-                            <div
-                                className="min-h-20 rounded-lg border border-transparent bg-transparent p-2 sm:min-h-24 sm:p-3"
-                                key={dateKey}
-                            />
-                        );
-                    })}
+                                return cell.isCurrentMonth ? (
+                                    <button
+                                        className={[
+                                            'flex min-h-20 cursor-pointer flex-col items-center justify-start gap-1 rounded-lg border border-zinc-200 bg-white p-2 text-sm font-semibold text-zinc-700 transition hover:border-teal-700/30 hover:bg-teal-50/50 focus:outline-none focus:ring-4 focus:ring-teal-700/10 sm:min-h-24 sm:p-3',
+                                            cell.isToday
+                                                ? 'border-teal-700/40 bg-teal-50 text-teal-800 ring-1 ring-teal-700/15'
+                                                : '',
+                                        ].join(' ')}
+                                        key={dateKey}
+                                        type="button"
+                                        onClick={() => handleDayClick(cell.date)}
+                                    >
+                                        <span>{cell.date.getDate()}</span>
+                                        {entry ? (
+                                            <span className="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-bold text-teal-700 ring-1 ring-teal-700/10">
+                                                {formatTipAmount(entry.tipsEarned)}
+                                            </span>
+                                        ) : null}
+                                    </button>
+                                ) : (
+                                    <div
+                                        className="min-h-20 rounded-lg border border-transparent bg-transparent p-2 sm:min-h-24 sm:p-3"
+                                        key={dateKey}
+                                    />
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {isLoading ? (
+                        <div
+                            className="absolute inset-0 z-10 grid place-items-center rounded-lg bg-white/60 backdrop-blur-[1px]"
+                            aria-live="polite"
+                            aria-busy="true"
+                            role="status"
+                            aria-label="Loading entries"
+                        >
+                            <div className="grid h-12 w-12 place-items-center rounded-full border border-teal-700/15 bg-white/90 shadow-lg shadow-zinc-950/10">
+                                <span
+                                    className="h-6 w-6 animate-spin rounded-full border-2 border-teal-700/25 border-t-teal-700"
+                                    aria-hidden="true"
+                                />
+                            </div>
+                        </div>
+                    ) : null}
                 </div>
 
                 <div className="mt-4 min-h-6" aria-live="polite">
-                    {isLoading ? <p className="text-sm font-medium text-zinc-500">Loading saved entries...</p> : null}
                     {error ? <p className="text-sm font-medium text-red-700">{error}</p> : null}
                 </div>
             </div>
