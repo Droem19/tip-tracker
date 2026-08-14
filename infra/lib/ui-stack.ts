@@ -105,6 +105,8 @@ export class UIStack extends cdk.Stack {
             },
             additionalBehaviors: {
                 'auth/*': apiBehavior,
+                'daily-entry/*': apiBehavior,
+                'daily-entries': apiBehavior,
                 health: apiBehavior,
                 me: apiBehavior,
             },

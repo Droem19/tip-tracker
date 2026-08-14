@@ -1,4 +1,15 @@
-import type { AuthApp, AuthResponse, AuthUser, MeResponse, MessageResponse, SignUpResponse } from 'api';
+import type {
+    AuthApp,
+    AuthResponse,
+    AuthUser,
+    DailyTipEntriesResponse,
+    DailyTipEntry,
+    DailyTipEntryResponse,
+    MeResponse,
+    MessageResponse,
+    SaveDailyTipEntryRequest,
+    SignUpResponse,
+} from 'api';
 import { hc } from 'hono/client';
 
 const apiUrl = import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? 'http://localhost:8787' : window.location.origin);
@@ -98,4 +109,29 @@ export const authApi = {
     },
 };
 
-export type { AuthUser };
+export const dailyEntryApi = {
+    list: async (startDate: string, endDate: string) => {
+        const searchParams = new URLSearchParams({ startDate, endDate });
+        const response = await authFetch(`${apiUrl}/daily-entries?${searchParams.toString()}`);
+
+        return parseResponse<DailyTipEntriesResponse>(response);
+    },
+    save: async (date: string, request: SaveDailyTipEntryRequest) => {
+        const response = await authFetch(`${apiUrl}/daily-entry/${encodeURIComponent(date)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request),
+        });
+
+        return parseResponse<DailyTipEntryResponse>(response);
+    },
+    delete: async (date: string) => {
+        const response = await authFetch(`${apiUrl}/daily-entry/${encodeURIComponent(date)}`, {
+            method: 'DELETE',
+        });
+
+        return parseResponse<MessageResponse>(response);
+    },
+};
+
+export type { AuthUser, DailyTipEntry, SaveDailyTipEntryRequest };

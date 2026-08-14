@@ -1,6 +1,6 @@
 # Tip Tracker
 
-Tip Tracker is a React app for tracking tip income, with Cognito-backed login, a typed Hono API, and AWS infrastructure managed with CDK. The API owns auth and stores Cognito tokens in HTTP-only cookies, while the UI uses `/me` to protect authenticated app routes.
+Tip Tracker is a React app for tracking tip income, with Cognito-backed login, persisted daily income entries, a typed Hono API, and AWS infrastructure managed with CDK. The API owns auth and stores Cognito tokens in HTTP-only cookies, while the UI uses `/me` to protect authenticated app routes.
 
 ## Tech Stack
 
@@ -17,11 +17,11 @@ Tip Tracker is a React app for tracking tip income, with Cognito-backed login, a
 - `ui` - Vite React app
 - `ui/src/pages` - Route-level pages for login, sign-up, forgot password, app, reporting, and not found states
 - `ui/src/components` - Shared app shell components, including the authenticated navbar, footer, modals, and summary cards
-- `ui/src/auth` - Client-side auth provider and typed Hono API client
+- `ui/src/auth` - Client-side auth provider and typed API helpers
 - `api` - Hono serverless API
 - `api/src/lambdas` - Lambda entry points and route wiring
 - `api/src/contracts` - API request/response types and validators
-- `api/src/lib` - Reusable API helpers and Cognito utilities
+- `api/src/lib` - Reusable API helpers, Cognito utilities, and DynamoDB data helpers
 - `infra` - CDK app and stacks for hosting the UI, Cognito, HTTP API, and Lambda
 - `.github/workflows/deploy.yml` - Production deploy workflow for pushes to `main` and manual dispatches
 
@@ -72,6 +72,8 @@ Copy-Item api/.env.example api/.env
 
 Then fill in `USER_POOL_ID`, `USER_POOL_CLIENT_ID`, and `USER_POOL_REGION` in `api/.env`. You can get those values from the CDK outputs after deploying the API stack.
 
+Daily-entry CRUD also needs `DAILY_TIP_ENTRIES_TABLE_NAME` and AWS credentials that can read and write the table. The deployed Lambda receives the table name and IAM permissions from CDK automatically; local development must provide them through your environment.
+
 The API sets HTTP-only cookies for Cognito access, ID, and refresh tokens. The UI does not store auth tokens in `localStorage`.
 
 ## Quality Checks
@@ -94,7 +96,7 @@ Build every package with a build script:
 pnpm run build
 ```
 
-## API and Auth
+## API
 
 The auth Hono app lives in `api/src/lambdas/auth.ts` and exposes:
 
@@ -109,7 +111,16 @@ The auth Hono app lives in `api/src/lambdas/auth.ts` and exposes:
 - `POST /auth/logout`
 - `GET /me`
 
-The UI uses Hono's typed client from `hono/client` in `ui/src/auth/api.ts`. The API package exports the route type, so UI calls like `client.auth.login.$post(...)` are checked against the actual Hono routes. The client sends cookies with each request and retries once through `/auth/refresh` when an authenticated request returns `401`.
+The daily-entry Hono app lives in `api/src/lambdas/daily-entry.ts` and exposes:
+
+- `GET /daily-entries?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD`
+- `GET /daily-entry/{date}`
+- `PUT /daily-entry/{date}`
+- `DELETE /daily-entry/{date}`
+
+Daily entries are keyed by authenticated Cognito user and date. The frontend never sends `userId`; the API derives it from the signed-in user's HTTP-only Cognito cookies. The request body for `PUT /daily-entry/{date}` contains only `tipsEarned`, `hoursWorked`, and `totalSales`.
+
+The UI uses Hono's typed client from `hono/client` for auth calls and shared API response/request types from the `api` workspace package. Authenticated API requests send cookies with each request and retry once through `/auth/refresh` when an authenticated request returns `401`.
 
 The `/app` and `/reporting` UI routes are protected by the auth provider. If `/me` cannot resolve a signed-in user, the user is routed back to `/`.
 
@@ -136,7 +147,7 @@ The UI stack creates:
 
 - Private S3 bucket for static site assets
 - CloudFront distribution with Origin Access Control
-- CloudFront proxy behaviors for `/auth/*`, `/me`, and `/health` so the deployed UI calls the API through the same site origin
+- CloudFront proxy behaviors for `/auth/*`, `/daily-entry/*`, `/daily-entries`, `/me`, and `/health` so the deployed UI calls the API through the same site origin
 - CloudFront Function SPA routing for extensionless UI paths like `/verify`, without rewriting API error responses
 - ACM certificate for the primary domain and `www` domain
 - Route53 A and AAAA alias records for both domains
@@ -148,7 +159,9 @@ The API stack creates:
 - Cognito user pool client
 - HTTP API Gateway
 - `tip-tracker-auth` Lambda backed by the Hono API
-- Lambda integration for API Gateway
+- `tip-tracker-daily-entry` Lambda backed by the daily-entry Hono API
+- DynamoDB table for daily tip entries with `userId` as the partition key and `date` as the sort key
+- API Gateway route integrations for auth and daily-entry routes
 
 ## Deploying the app
 

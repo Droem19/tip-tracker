@@ -21,6 +21,11 @@ export function AppModal({
     const descriptionId = useId();
     const closeButtonRef = useRef<HTMLButtonElement>(null);
     const dialogRef = useRef<HTMLElement>(null);
+    const onCloseRef = useRef(onClose);
+
+    useEffect(() => {
+        onCloseRef.current = onClose;
+    }, [onClose]);
 
     useEffect(() => {
         const previousOverflow = document.body.style.overflow;
@@ -30,7 +35,7 @@ export function AppModal({
         (closeButtonRef.current ?? dialogRef.current)?.focus();
 
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') onClose();
+            if (event.key === 'Escape') onCloseRef.current();
         };
 
         document.addEventListener('keydown', handleKeyDown);
@@ -40,7 +45,7 @@ export function AppModal({
             document.removeEventListener('keydown', handleKeyDown);
             previousActiveElement?.focus();
         };
-    }, [onClose]);
+    }, []);
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/45 p-4 backdrop-blur-sm">

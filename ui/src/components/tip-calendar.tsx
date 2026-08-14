@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 
+import type { DailyTipEntry } from '../auth/api';
+import { formatLocalDateKey } from '../lib/local-date';
+
 const weekdayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const monthOptions = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -10,7 +13,12 @@ type CalendarCell = {
 };
 
 type TipCalendarProps = {
+    displayedMonth: Date;
+    entriesByDate: Record<string, DailyTipEntry>;
+    error: string | null;
+    isLoading: boolean;
     onDayClick: (date: Date) => void;
+    onMonthChange: (date: Date) => void;
 };
 
 const today = new Date();
@@ -44,8 +52,16 @@ const getMonthLabel = (date: Date) =>
         year: 'numeric',
     });
 
-export function TipCalendar({ onDayClick }: TipCalendarProps) {
-    const [displayedMonth, setDisplayedMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
+const formatTipAmount = (amount: number) => `$${amount.toFixed(2)}`;
+
+export function TipCalendar({
+    displayedMonth,
+    entriesByDate,
+    error,
+    isLoading,
+    onDayClick,
+    onMonthChange,
+}: TipCalendarProps) {
     const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
     const [draftYear, setDraftYear] = useState(displayedMonth.getFullYear());
     const monthPickerRef = useRef<HTMLDivElement>(null);
@@ -79,17 +95,17 @@ export function TipCalendar({ onDayClick }: TipCalendarProps) {
     };
 
     const jumpToMonth = (month: number) => {
-        setDisplayedMonth(new Date(draftYear, month, 1));
+        onMonthChange(new Date(draftYear, month, 1));
         setIsMonthPickerOpen(false);
     };
 
     const showPreviousMonth = () => {
-        setDisplayedMonth((currentMonth) => new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+        onMonthChange(new Date(displayedMonth.getFullYear(), displayedMonth.getMonth() - 1, 1));
         setIsMonthPickerOpen(false);
     };
 
     const showNextMonth = () => {
-        setDisplayedMonth((currentMonth) => new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+        onMonthChange(new Date(displayedMonth.getFullYear(), displayedMonth.getMonth() + 1, 1));
         setIsMonthPickerOpen(false);
     };
 
@@ -229,28 +245,41 @@ export function TipCalendar({ onDayClick }: TipCalendarProps) {
                 </div>
 
                 <div className="mt-3 grid grid-cols-7 gap-2">
-                    {calendarCells.map((cell) =>
-                        cell.isCurrentMonth ? (
+                    {calendarCells.map((cell) => {
+                        const dateKey = formatLocalDateKey(cell.date);
+                        const entry = entriesByDate[dateKey];
+
+                        return cell.isCurrentMonth ? (
                             <button
                                 className={[
-                                    'flex min-h-20 cursor-pointer justify-center rounded-lg border border-zinc-200 bg-white p-2 text-sm font-semibold text-zinc-700 transition hover:border-teal-700/30 hover:bg-teal-50/50 focus:outline-none focus:ring-4 focus:ring-teal-700/10 sm:min-h-24 sm:p-3',
+                                    'flex min-h-20 cursor-pointer flex-col items-center justify-start gap-1 rounded-lg border border-zinc-200 bg-white p-2 text-sm font-semibold text-zinc-700 transition hover:border-teal-700/30 hover:bg-teal-50/50 focus:outline-none focus:ring-4 focus:ring-teal-700/10 sm:min-h-24 sm:p-3',
                                     cell.isToday
                                         ? 'border-teal-700/40 bg-teal-50 text-teal-800 ring-1 ring-teal-700/15'
                                         : '',
                                 ].join(' ')}
-                                key={`${cell.date.getFullYear()}-${cell.date.getMonth()}-${cell.date.getDate()}`}
+                                key={dateKey}
                                 type="button"
                                 onClick={() => handleDayClick(cell.date)}
                             >
                                 <span>{cell.date.getDate()}</span>
+                                {entry ? (
+                                    <span className="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-bold text-teal-700 ring-1 ring-teal-700/10">
+                                        {formatTipAmount(entry.tipsEarned)}
+                                    </span>
+                                ) : null}
                             </button>
                         ) : (
                             <div
                                 className="min-h-20 rounded-lg border border-transparent bg-transparent p-2 sm:min-h-24 sm:p-3"
-                                key={`${cell.date.getFullYear()}-${cell.date.getMonth()}-${cell.date.getDate()}`}
+                                key={dateKey}
                             />
-                        )
-                    )}
+                        );
+                    })}
+                </div>
+
+                <div className="mt-4 min-h-6" aria-live="polite">
+                    {isLoading ? <p className="text-sm font-medium text-zinc-500">Loading saved entries...</p> : null}
+                    {error ? <p className="text-sm font-medium text-red-700">{error}</p> : null}
                 </div>
             </div>
         </section>
