@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import {
     aws_apigatewayv2 as apigatewayv2,
     aws_cognito as cognito,
+    aws_dynamodb as dynamodb,
     aws_lambda as lambda,
     aws_lambda_nodejs as lambdaNodejs,
 } from 'aws-cdk-lib';
@@ -17,6 +18,7 @@ type APIStackProps = cdk.StackProps & {
 
 export class APIStack extends cdk.Stack {
     public readonly api: apigatewayv2.HttpApi;
+    public readonly dailyTipEntriesTable: dynamodb.Table;
 
     constructor(scope: Construct, id: string, props: APIStackProps) {
         super(scope, id, props);
@@ -96,8 +98,26 @@ export class APIStack extends cdk.Stack {
             }),
         });
 
+        this.dailyTipEntriesTable = new dynamodb.Table(this, 'DailyTipEntries', {
+            partitionKey: {
+                name: 'userId',
+                type: dynamodb.AttributeType.STRING,
+            },
+            sortKey: {
+                name: 'date',
+                type: dynamodb.AttributeType.STRING,
+            },
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+            encryption: dynamodb.TableEncryption.AWS_MANAGED,
+            pointInTimeRecoverySpecification: {
+                pointInTimeRecoveryEnabled: true,
+            },
+            removalPolicy: cdk.RemovalPolicy.RETAIN,
+        });
+
         const stackSourceDir = path.dirname(fileURLToPath(import.meta.url));
         const authLambdaEntry = path.resolve(stackSourceDir, '../../api/src/lambdas/auth.ts');
+        const dailyEntryLambdaEntry = path.resolve(stackSourceDir, '../../api/src/lambdas/daily-entry.ts');
 
         const authLambda = new lambdaNodejs.NodejsFunction(this, 'AuthLambda', {
             functionName: 'tip-tracker-auth',
@@ -118,6 +138,29 @@ export class APIStack extends cdk.Stack {
                 USER_POOL_REGION: this.region,
             },
         });
+
+        const dailyEntryLambda = new lambdaNodejs.NodejsFunction(this, 'DailyEntryLambda', {
+            functionName: 'tip-tracker-daily-entry',
+            entry: dailyEntryLambdaEntry,
+            handler: 'handler',
+            runtime: lambda.Runtime.NODEJS_22_X,
+            architecture: lambda.Architecture.ARM_64,
+            memorySize: 512,
+            timeout: cdk.Duration.seconds(10),
+            environment: {
+                ALLOWED_ORIGINS: [
+                    `https://${props.siteDomain}`,
+                    `https://www.${props.siteDomain}`,
+                    'http://localhost:5173',
+                ].join(','),
+                USER_POOL_ID: userPool.userPoolId,
+                USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
+                USER_POOL_REGION: this.region,
+                DAILY_TIP_ENTRIES_TABLE_NAME: this.dailyTipEntriesTable.tableName,
+            },
+        });
+
+        this.dailyTipEntriesTable.grantReadWriteData(dailyEntryLambda);
 
         this.api = new apigatewayv2.HttpApi(this, 'AuthApi', {
             apiName: 'tip-tracker-api',
@@ -140,12 +183,25 @@ export class APIStack extends cdk.Stack {
             },
         });
 
-        const lambdaIntegration = new HttpLambdaIntegration('AuthLambdaIntegration', authLambda);
+        const authLambdaIntegration = new HttpLambdaIntegration('AuthLambdaIntegration', authLambda);
+        const dailyEntryLambdaIntegration = new HttpLambdaIntegration('DailyEntryLambdaIntegration', dailyEntryLambda);
 
         this.api.addRoutes({
             path: '/{proxy+}',
             methods: [apigatewayv2.HttpMethod.ANY],
-            integration: lambdaIntegration,
+            integration: authLambdaIntegration,
+        });
+
+        this.api.addRoutes({
+            path: '/daily-entry/{date}',
+            methods: [apigatewayv2.HttpMethod.GET, apigatewayv2.HttpMethod.PUT, apigatewayv2.HttpMethod.DELETE],
+            integration: dailyEntryLambdaIntegration,
+        });
+
+        this.api.addRoutes({
+            path: '/daily-entries',
+            methods: [apigatewayv2.HttpMethod.GET],
+            integration: dailyEntryLambdaIntegration,
         });
 
         new cdk.CfnOutput(this, 'AuthApiUrlOutput', {

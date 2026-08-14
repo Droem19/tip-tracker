@@ -3,6 +3,7 @@ import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
 
 import type { MessageResponse } from '../contracts/types';
+import { isValidDateOnlyString } from '../contracts/validators';
 
 export const readEnv = (name: string) => {
     const runtime = globalThis as typeof globalThis & {
@@ -25,8 +26,28 @@ export const corsMiddleware = cors({
     origin: getAllowedOrigins(),
     credentials: true,
     allowHeaders: ['Authorization', 'Content-Type'],
-    allowMethods: ['GET', 'POST', 'OPTIONS'],
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 });
+
+export const readDatePathParam = (date: string | undefined) => {
+    if (!isValidDateOnlyString(date)) {
+        throw new HTTPException(400, { message: 'Date must be a valid YYYY-MM-DD calendar date.' });
+    }
+
+    return date;
+};
+
+export const readDateRangeQuery = (startDate: string | undefined, endDate: string | undefined) => {
+    if (!isValidDateOnlyString(startDate) || !isValidDateOnlyString(endDate)) {
+        throw new HTTPException(400, { message: 'startDate and endDate must be valid YYYY-MM-DD calendar dates.' });
+    }
+
+    if (startDate > endDate) {
+        throw new HTTPException(400, { message: 'startDate must be before or equal to endDate.' });
+    }
+
+    return { startDate, endDate };
+};
 
 export const errorHandler = (error: Error, context: Context) => {
     if (error instanceof HTTPException) {

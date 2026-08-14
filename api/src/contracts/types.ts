@@ -22,6 +22,27 @@ export type SignUpResponse = MessageResponse & {
     userConfirmed: boolean;
 };
 
+export type DailyTipEntry = {
+    date: string;
+    tipsEarned: number;
+    hoursWorked: number;
+    totalSales: number;
+};
+
+export type SaveDailyTipEntryRequest = {
+    tipsEarned: number;
+    hoursWorked: number;
+    totalSales: number;
+};
+
+export type DailyTipEntryResponse = {
+    entry: DailyTipEntry;
+};
+
+export type DailyTipEntriesResponse = {
+    entries: DailyTipEntry[];
+};
+
 export type EmailPasswordRequest = {
     email: string;
     password: string;

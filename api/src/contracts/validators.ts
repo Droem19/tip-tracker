@@ -6,6 +6,7 @@ import type {
     EmailPasswordRequest,
     EmailRequest,
     MessageResponse,
+    SaveDailyTipEntryRequest,
 } from './types';
 
 const readStringField = (body: unknown, fieldName: string) => {
@@ -14,6 +15,32 @@ const readStringField = (body: unknown, fieldName: string) => {
     const value = (body as Record<string, unknown>)[fieldName];
 
     return typeof value === 'string' ? value.trim() : undefined;
+};
+
+const readFiniteNonNegativeNumberField = (body: unknown, fieldName: string) => {
+    if (!body || typeof body !== 'object' || !(fieldName in body)) return undefined;
+
+    const value = (body as Record<string, unknown>)[fieldName];
+
+    return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : undefined;
+};
+
+export const isValidDateOnlyString = (value: unknown): value is string => {
+    if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+
+    const [yearText, monthText, dayText] = value.split('-');
+    const year = Number(yearText);
+    const month = Number(monthText);
+    const day = Number(dayText);
+
+    if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return false;
+    if (month < 1 || month > 12 || day < 1) return false;
+
+    return (
+        new Date(year, month - 1, day).getFullYear() === year &&
+        new Date(year, month - 1, day).getMonth() === month - 1 &&
+        new Date(year, month - 1, day).getDate() === day
+    );
 };
 
 export const emailPasswordValidator = validator('json', (body, context) => {
@@ -58,4 +85,19 @@ export const emailValidator = validator('json', (body, context) => {
     }
 
     return { email } satisfies EmailRequest;
+});
+
+export const saveDailyTipEntryValidator = validator('json', (body, context) => {
+    const tipsEarned = readFiniteNonNegativeNumberField(body, 'tipsEarned');
+    const hoursWorked = readFiniteNonNegativeNumberField(body, 'hoursWorked');
+    const totalSales = readFiniteNonNegativeNumberField(body, 'totalSales');
+
+    if (tipsEarned === undefined || hoursWorked === undefined || totalSales === undefined) {
+        return context.json<MessageResponse>(
+            { message: 'Tips earned, hours worked, and total sales must be finite non-negative numbers.' },
+            400
+        );
+    }
+
+    return { tipsEarned, hoursWorked, totalSales } satisfies SaveDailyTipEntryRequest;
 });
