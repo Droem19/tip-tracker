@@ -113,7 +113,7 @@ export function ForgotPasswordPage() {
                 {message ? <p className="text-sm font-medium text-teal-700">{message}</p> : null}
 
                 <button
-                    className="h-11 w-full rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="h-11 w-full rounded-md bg-[#293453] px-4 text-sm font-semibold text-white transition hover:bg-[#222b45] disabled:cursor-not-allowed disabled:opacity-60"
                     disabled={isSubmitting}
                     type="submit"
                 >

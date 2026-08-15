@@ -122,7 +122,7 @@ export function HomePage() {
 
                     <div className="space-y-3 pt-1 text-center">
                         <button
-                            className="h-10 w-full rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="h-10 w-full rounded-md bg-[var(--color-primary-action)] px-4 text-sm font-semibold text-white transition hover:bg-[var(--color-primary-action-hover)] disabled:cursor-not-allowed disabled:opacity-60"
                             disabled={isSubmitting}
                             type="submit"
                         >
@@ -141,7 +141,7 @@ export function HomePage() {
                 <div className="mt-6 space-y-3 text-center">
                     <p className="text-base font-medium text-zinc-700">Don't have an account?</p>
                     <Link
-                        className="inline-flex h-10 w-full items-center justify-center rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-950 transition hover:border-zinc-400 hover:bg-zinc-100"
+                        className="inline-flex h-10 w-full items-center justify-center rounded-md border border-[#293453] bg-white px-4 text-sm font-semibold text-[#293453] transition hover:bg-[#293453]/5"
                         to="/signup"
                     >
                         Create new account

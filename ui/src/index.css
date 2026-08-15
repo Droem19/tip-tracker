@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+:root {
+    --color-primary-action: #293453;
+    --color-primary-action-hover: #222b45;
+}
+
 body {
     margin: 0;
     background: #fafaf9;

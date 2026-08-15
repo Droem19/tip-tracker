@@ -93,7 +93,7 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
                         Cancel
                     </button>
                     <button
-                        className="inline-flex h-10 items-center justify-center rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800 focus:outline-none focus:ring-4 focus:ring-teal-700/15"
+                        className="inline-flex h-10 items-center justify-center rounded-md bg-[#293453] px-4 text-sm font-semibold text-white transition hover:bg-[#222b45] focus:outline-none focus:ring-4 focus:ring-[#293453]/15"
                         type="submit"
                     >
                         Save Changes
