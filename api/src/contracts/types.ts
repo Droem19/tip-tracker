@@ -4,6 +4,8 @@ export type AuthUser = {
     emailVerified: boolean;
     name?: string;
     givenName?: string;
+    familyName?: string;
+    hourlyWage?: number;
 };
 
 export type AuthResponse = {
@@ -46,6 +48,12 @@ export type DailyTipEntriesResponse = {
 export type EmailPasswordRequest = {
     email: string;
     password: string;
+};
+
+export type SignUpRequest = EmailPasswordRequest & {
+    firstName: string;
+    lastName: string;
+    hourlyWage: number;
 };
 
 export type EmailCodeRequest = {

@@ -108,6 +108,10 @@ const userFromTokens = async (accessToken: string, idToken: string): Promise<Aut
     const email = typeof idPayload.email === 'string' ? idPayload.email : undefined;
     const name = typeof idPayload.name === 'string' ? idPayload.name : undefined;
     const givenName = typeof idPayload.given_name === 'string' ? idPayload.given_name : undefined;
+    const familyName = typeof idPayload.family_name === 'string' ? idPayload.family_name : undefined;
+    const hourlyWageText =
+        typeof idPayload['custom:hourlyWage'] === 'string' ? idPayload['custom:hourlyWage'] : undefined;
+    const hourlyWage = hourlyWageText === undefined ? undefined : Number(hourlyWageText);
 
     if (!accessPayload.sub || !email) {
         throw new HTTPException(401, { message: 'Unauthorized' });
@@ -119,6 +123,8 @@ const userFromTokens = async (accessToken: string, idToken: string): Promise<Aut
         emailVerified: idPayload.email_verified === true || idPayload.email_verified === 'true',
         ...(name ? { name } : {}),
         ...(givenName ? { givenName } : {}),
+        ...(familyName ? { familyName } : {}),
+        ...(Number.isFinite(hourlyWage) ? { hourlyWage } : {}),
     };
 };
 

@@ -8,6 +8,7 @@ import type {
     MeResponse,
     MessageResponse,
     SaveDailyTipEntryRequest,
+    SignUpRequest,
     SignUpResponse,
 } from 'api';
 import { hc } from 'hono/client';
@@ -79,8 +80,8 @@ export const authApi = {
         const response = await client.auth.login.$post({ json: { email, password } });
         return parseResponse<AuthResponse>(response);
     },
-    signUp: async (email: string, password: string) => {
-        const response = await client.auth.signup.$post({ json: { email, password } });
+    signUp: async (request: SignUpRequest) => {
+        const response = await client.auth.signup.$post({ json: request });
         return parseResponse<SignUpResponse>(response);
     },
     confirmSignUp: async (email: string, code: string) => {
@@ -134,4 +135,4 @@ export const dailyEntryApi = {
     },
 };
 
-export type { AuthUser, DailyTipEntry, SaveDailyTipEntryRequest };
+export type { AuthUser, DailyTipEntry, SaveDailyTipEntryRequest, SignUpRequest };

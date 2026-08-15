@@ -6,6 +6,9 @@ import { useAuth } from '../auth/auth-context';
 export function SignUpPage() {
     const { signUp, user } = useAuth();
     const navigate = useNavigate();
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [hourlyWage, setHourlyWage] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -13,6 +16,8 @@ export function SignUpPage() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const hourlyWageValue = Number(hourlyWage);
+    const hasValidHourlyWage = hourlyWage.trim() !== '' && Number.isFinite(hourlyWageValue) && hourlyWageValue >= 0;
     const hasValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     const shouldShowEmailError = email.length > 0 && !hasValidEmail;
     const passwordRequirements = [
@@ -30,6 +35,18 @@ export function SignUpPage() {
         event.preventDefault();
         setError(null);
         setIsSubmitting(true);
+
+        if (!firstName.trim() || !lastName.trim()) {
+            setError('First name and last name are required.');
+            setIsSubmitting(false);
+            return;
+        }
+
+        if (!hasValidHourlyWage) {
+            setError('Enter a valid hourly wage.');
+            setIsSubmitting(false);
+            return;
+        }
 
         if (!hasValidEmail) {
             setError('Enter a valid email address.');
@@ -50,7 +67,13 @@ export function SignUpPage() {
         }
 
         try {
-            await signUp(email, password);
+            await signUp({
+                email,
+                password,
+                firstName: firstName.trim(),
+                lastName: lastName.trim(),
+                hourlyWage: hourlyWageValue,
+            });
             navigate(`/verify?email=${encodeURIComponent(email)}`, { replace: true, state: { password } });
         } catch (requestError) {
             setError(requestError instanceof Error ? requestError.message : 'Unable to create your account.');
@@ -69,6 +92,60 @@ export function SignUpPage() {
                     <h1 className="text-center text-xl font-semibold tracking-tight">Create Account</h1>
 
                     <form className="mt-5 space-y-5" noValidate onSubmit={handleSubmit}>
+                        <div className="grid grid-cols-2 gap-3">
+                            <label className="block text-sm font-medium text-zinc-700">
+                                First Name
+                                <input
+                                    className="mt-2 h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-base outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-700/10"
+                                    autoComplete="given-name"
+                                    name="firstName"
+                                    type="text"
+                                    value={firstName}
+                                    onChange={(event) => {
+                                        setFirstName(event.target.value);
+                                        setError(null);
+                                    }}
+                                />
+                            </label>
+
+                            <label className="block text-sm font-medium text-zinc-700">
+                                Last Name
+                                <input
+                                    className="mt-2 h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-base outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-700/10"
+                                    autoComplete="family-name"
+                                    name="lastName"
+                                    type="text"
+                                    value={lastName}
+                                    onChange={(event) => {
+                                        setLastName(event.target.value);
+                                        setError(null);
+                                    }}
+                                />
+                            </label>
+                        </div>
+
+                        <label className="block text-sm font-medium text-zinc-700">
+                            Hourly Wage
+                            <div className="relative mt-2">
+                                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base text-zinc-500">
+                                    $
+                                </span>
+                                <input
+                                    className="h-11 w-full rounded-md border border-zinc-300 bg-white px-3 pl-7 text-base outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-700/10"
+                                    inputMode="decimal"
+                                    min="0"
+                                    name="hourlyWage"
+                                    step="0.01"
+                                    type="number"
+                                    value={hourlyWage}
+                                    onChange={(event) => {
+                                        setHourlyWage(event.target.value);
+                                        setError(null);
+                                    }}
+                                />
+                            </div>
+                        </label>
+
                         <label className="block text-sm font-medium text-zinc-700">
                             Email
                             <input

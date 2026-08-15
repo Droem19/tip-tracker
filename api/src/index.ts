@@ -11,6 +11,7 @@ export type {
     MeResponse,
     MessageResponse,
     SaveDailyTipEntryRequest,
+    SignUpRequest,
     SignUpResponse,
 } from './contracts/types';
 export type { AuthApp } from './lambdas/auth';

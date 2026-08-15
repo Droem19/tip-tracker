@@ -1,12 +1,12 @@
 import { createContext, type ReactNode, use, useCallback, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router';
 
-import { type AuthUser, authApi } from './api';
+import { type AuthUser, authApi, type SignUpRequest } from './api';
 
 type AuthContextValue = {
     user: AuthUser | null;
     login: (email: string, password: string) => Promise<void>;
-    signUp: (email: string, password: string) => Promise<string>;
+    signUp: (request: SignUpRequest) => Promise<string>;
     confirmSignUp: (email: string, code: string) => Promise<string>;
     resendCode: (email: string) => Promise<string>;
     forgotPassword: (email: string) => Promise<string>;
@@ -37,8 +37,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const response = await authApi.login(email, password);
             setUser(response.user);
         },
-        signUp: async (email, password) => {
-            const response = await authApi.signUp(email, password);
+        signUp: async (request) => {
+            const response = await authApi.signUp(request);
             return response.message;
         },
         confirmSignUp: async (email, code) => {

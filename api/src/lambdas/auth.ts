@@ -22,6 +22,7 @@ import {
     emailCodeValidator,
     emailPasswordValidator,
     emailValidator,
+    signUpValidator,
 } from '../contracts/validators';
 import { corsMiddleware, errorHandler } from '../lib/api-helpers';
 import {
@@ -43,8 +44,8 @@ const routes = app
     .get('/health', (context) => {
         return context.json({ ok: true });
     })
-    .post('/auth/signup', emailPasswordValidator, async (context) => {
-        const { email, password } = context.req.valid('json');
+    .post('/auth/signup', signUpValidator, async (context) => {
+        const { email, firstName, hourlyWage, lastName, password } = context.req.valid('json');
         const config = getCognitoConfig();
         const client = getCognitoClient(config.region);
 
@@ -54,7 +55,12 @@ const routes = app
                     ClientId: config.clientId,
                     Username: email,
                     Password: password,
-                    UserAttributes: [{ Name: 'email', Value: email }],
+                    UserAttributes: [
+                        { Name: 'email', Value: email },
+                        { Name: 'given_name', Value: firstName },
+                        { Name: 'family_name', Value: lastName },
+                        { Name: 'custom:hourlyWage', Value: String(hourlyWage) },
+                    ],
                 })
             );
 
@@ -275,6 +281,7 @@ export type {
     EmailRequest,
     MeResponse,
     MessageResponse,
+    SignUpRequest,
     SignUpResponse,
 } from '../contracts/types';
 
