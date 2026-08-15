@@ -74,6 +74,12 @@ Then fill in `USER_POOL_ID`, `USER_POOL_CLIENT_ID`, and `USER_POOL_REGION` in `a
 
 Daily-entry CRUD also needs `DAILY_TIP_ENTRIES_TABLE_NAME` and AWS credentials that can read and write the table. The deployed Lambda receives the table name and IAM permissions from CDK automatically; local development must provide them through your environment.
 
+Running locally still utilizes the deployed DynamoDB table, so you need to be authenticated with:
+
+```powershell
+pnpm run sso
+```
+
 The API sets HTTP-only cookies for Cognito access, ID, and refresh tokens. The UI does not store auth tokens in `localStorage`.
 
 ## Quality Checks
