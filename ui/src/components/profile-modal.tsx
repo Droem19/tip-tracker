@@ -1,31 +1,73 @@
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 
 import { AppModal } from './app-modal';
 import { useAuth } from '../auth/auth-context';
+import { formatCurrencyAmount, parseCurrencyAmount, sanitizeCurrencyAmountInput } from '../lib/currency';
 
 type ProfileModalProps = {
     onClose: () => void;
 };
 
-const getProfileNameParts = (name?: string, givenName?: string) => {
+const getProfileNameParts = (name?: string, givenName?: string, familyName?: string) => {
     const nameParts = name?.trim().split(/\s+/) ?? [];
 
     return {
         firstName: givenName?.trim() || nameParts[0] || '',
-        lastName: nameParts.slice(1).join(' '),
+        lastName: familyName?.trim() || nameParts.slice(1).join(' '),
     };
 };
 
 export function ProfileModal({ onClose }: ProfileModalProps) {
-    const { user } = useAuth();
-    const profileNameParts = getProfileNameParts(user?.name, user?.givenName);
+    const { refreshUser, updateProfile, user } = useAuth();
+    const profileNameParts = getProfileNameParts(user?.name, user?.givenName, user?.familyName);
     const [firstName, setFirstName] = useState(profileNameParts.firstName);
     const [lastName, setLastName] = useState(profileNameParts.lastName);
-    const [hourlyRate, setHourlyRate] = useState('');
+    const [hourlyRate, setHourlyRate] = useState(formatCurrencyAmount(user?.hourlyWage));
+    const [error, setError] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
 
-    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    useEffect(() => {
+        void refreshUser();
+    }, [refreshUser]);
+
+    useEffect(() => {
+        const nextNameParts = getProfileNameParts(user?.name, user?.givenName, user?.familyName);
+
+        setFirstName(nextNameParts.firstName);
+        setLastName(nextNameParts.lastName);
+        setHourlyRate(formatCurrencyAmount(user?.hourlyWage));
+    }, [user]);
+
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        onClose();
+        setError('');
+
+        const hourlyWage = parseCurrencyAmount(hourlyRate);
+
+        if (!firstName.trim() || !lastName.trim()) {
+            setError('First and last name are required.');
+            return;
+        }
+
+        if (hourlyWage === null) {
+            setError('Enter a valid hourly rate.');
+            return;
+        }
+
+        setIsSaving(true);
+
+        try {
+            await updateProfile({
+                firstName: firstName.trim(),
+                lastName: lastName.trim(),
+                hourlyWage,
+            });
+            onClose();
+        } catch (submitError) {
+            setError(submitError instanceof Error ? submitError.message : 'Unable to update profile.');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -44,6 +86,7 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
                             name="firstName"
                             type="text"
                             value={firstName}
+                            required
                             onChange={(event) => setFirstName(event.target.value)}
                         />
                     </label>
@@ -56,6 +99,7 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
                             name="lastName"
                             type="text"
                             value={lastName}
+                            required
                             onChange={(event) => setLastName(event.target.value)}
                         />
                     </label>
@@ -70,19 +114,21 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
                         <input
                             className="h-10 w-full rounded-md border border-zinc-300 bg-white px-3 pl-7 text-sm font-medium text-zinc-950 outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-700/10"
                             inputMode="decimal"
-                            min="0"
                             name="hourlyRate"
-                            step="0.01"
-                            type="number"
+                            type="text"
                             value={hourlyRate}
-                            onChange={(event) => setHourlyRate(event.target.value)}
+                            required
+                            onBlur={() => setHourlyRate(formatCurrencyAmount(hourlyRate))}
+                            onChange={(event) => setHourlyRate(sanitizeCurrencyAmountInput(event.target.value))}
                         />
                     </div>
                 </label>
 
-                <div className="rounded-lg border border-teal-700/15 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-900">
-                    Profile editing is placeholder-only for now. Save Changes will close this modal without persisting.
-                </div>
+                {error ? (
+                    <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm leading-6 text-rose-800">
+                        {error}
+                    </div>
+                ) : null}
 
                 <div className="flex flex-col-reverse gap-3 border-t border-zinc-200 pt-5 sm:flex-row sm:justify-end">
                     <button
@@ -93,10 +139,11 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
                         Cancel
                     </button>
                     <button
-                        className="inline-flex h-10 items-center justify-center rounded-md bg-[#293453] px-4 text-sm font-semibold text-white transition hover:bg-[#222b45] focus:outline-none focus:ring-4 focus:ring-[#293453]/15"
+                        className="inline-flex h-10 items-center justify-center rounded-md bg-[#293453] px-4 text-sm font-semibold text-white transition hover:bg-[#222b45] focus:outline-none focus:ring-4 focus:ring-[#293453]/15 disabled:cursor-not-allowed disabled:opacity-70"
                         type="submit"
+                        disabled={isSaving}
                     >
-                        Save Changes
+                        {isSaving ? 'Saving...' : 'Save Changes'}
                     </button>
                 </div>
             </form>

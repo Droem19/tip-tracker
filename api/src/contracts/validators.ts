@@ -8,6 +8,7 @@ import type {
     MessageResponse,
     SaveDailyTipEntryRequest,
     SignUpRequest,
+    UpdateProfileRequest,
 } from './types';
 
 const readStringField = (body: unknown, fieldName: string) => {
@@ -70,6 +71,18 @@ export const signUpValidator = validator('json', (body, context) => {
     }
 
     return { email, password, firstName, lastName, hourlyWage } satisfies SignUpRequest;
+});
+
+export const updateProfileValidator = validator('json', (body, context) => {
+    const firstName = readStringField(body, 'firstName');
+    const lastName = readStringField(body, 'lastName');
+    const hourlyWage = readFiniteNonNegativeNumberField(body, 'hourlyWage');
+
+    if (!firstName || !lastName || hourlyWage === undefined) {
+        return context.json<MessageResponse>({ message: 'First name, last name, and hourly wage are required.' }, 400);
+    }
+
+    return { firstName, lastName, hourlyWage } satisfies UpdateProfileRequest;
 });
 
 export const emailCodeValidator = validator('json', (body, context) => {

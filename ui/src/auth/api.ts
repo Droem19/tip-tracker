@@ -10,6 +10,7 @@ import type {
     SaveDailyTipEntryRequest,
     SignUpRequest,
     SignUpResponse,
+    UpdateProfileRequest,
 } from 'api';
 import { hc } from 'hono/client';
 
@@ -108,6 +109,10 @@ export const authApi = {
         const response = await client.me.$get();
         return parseResponse<MeResponse>(response);
     },
+    updateProfile: async (request: UpdateProfileRequest) => {
+        const response = await client.me.$put({ json: request });
+        return parseResponse<AuthResponse>(response);
+    },
 };
 
 export const dailyEntryApi = {
@@ -135,4 +140,4 @@ export const dailyEntryApi = {
     },
 };
 
-export type { AuthUser, DailyTipEntry, SaveDailyTipEntryRequest, SignUpRequest };
+export type { AuthUser, DailyTipEntry, SaveDailyTipEntryRequest, SignUpRequest, UpdateProfileRequest };

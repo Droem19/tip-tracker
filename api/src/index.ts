@@ -13,6 +13,7 @@ export type {
     SaveDailyTipEntryRequest,
     SignUpRequest,
     SignUpResponse,
+    UpdateProfileRequest,
 } from './contracts/types';
 export type { AuthApp } from './lambdas/auth';
 export type { DailyEntryApp } from './lambdas/daily-entry';

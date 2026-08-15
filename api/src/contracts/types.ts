@@ -56,6 +56,12 @@ export type SignUpRequest = EmailPasswordRequest & {
     hourlyWage: number;
 };
 
+export type UpdateProfileRequest = {
+    firstName: string;
+    lastName: string;
+    hourlyWage: number;
+};
+
 export type EmailCodeRequest = {
     email: string;
     code: string;

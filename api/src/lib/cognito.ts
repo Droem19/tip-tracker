@@ -1,19 +1,22 @@
 import {
+    type AttributeType,
     type AuthenticationResultType,
     CodeDeliveryFailureException,
     CodeMismatchException,
     CognitoIdentityProviderClient,
     ExpiredCodeException,
+    GetUserCommand,
     InvalidParameterException,
     InvalidPasswordException,
     TooManyRequestsException,
+    UpdateUserAttributesCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import { getCookie, setCookie } from 'hono/cookie';
 import { HTTPException } from 'hono/http-exception';
 
 import { readEnv } from './api-helpers';
-import type { AuthUser, CognitoConfig } from '../contracts/types';
+import type { AuthUser, CognitoConfig, UpdateProfileRequest } from '../contracts/types';
 
 export const cookieNames = {
     accessToken: 'access_token',
@@ -95,6 +98,33 @@ const setAuthCookie = (context: Parameters<typeof setCookie>[0], name: string, v
     });
 };
 
+const readUserAttribute = (attributes: AttributeType[] | undefined, name: string) =>
+    attributes?.find((attribute) => attribute.Name === name)?.Value?.trim();
+
+const userFromCognitoAttributes = (fallbackSub: string, attributes: AttributeType[] | undefined): AuthUser => {
+    const sub = readUserAttribute(attributes, 'sub') || fallbackSub;
+    const email = readUserAttribute(attributes, 'email');
+    const name = readUserAttribute(attributes, 'name');
+    const givenName = readUserAttribute(attributes, 'given_name');
+    const familyName = readUserAttribute(attributes, 'family_name');
+    const hourlyWageText = readUserAttribute(attributes, 'custom:hourlyWage');
+    const hourlyWage = hourlyWageText === undefined ? undefined : Number(hourlyWageText);
+
+    if (!sub || !email) {
+        throw new HTTPException(401, { message: 'Unauthorized' });
+    }
+
+    return {
+        sub,
+        email,
+        emailVerified: readUserAttribute(attributes, 'email_verified') === 'true',
+        ...(name ? { name } : {}),
+        ...(givenName ? { givenName } : {}),
+        ...(familyName ? { familyName } : {}),
+        ...(Number.isFinite(hourlyWage) ? { hourlyWage } : {}),
+    };
+};
+
 export const clearAuthCookies = (context: Parameters<typeof setCookie>[0]) => {
     for (const name of Object.values(cookieNames)) {
         setAuthCookie(context, name, '', 0);
@@ -162,6 +192,60 @@ export const readUserFromCookies = async (context: Parameters<typeof getCookie>[
         if (error instanceof HTTPException) throw error;
 
         throw new HTTPException(401, { message: 'Unauthorized' });
+    }
+};
+
+export const readUserProfileFromCookies = async (context: Parameters<typeof getCookie>[0]) => {
+    const accessToken = getCookie(context, cookieNames.accessToken);
+
+    if (!accessToken) {
+        throw new HTTPException(401, { message: 'Unauthorized' });
+    }
+
+    try {
+        const config = getCognitoConfig();
+        const accessPayload = await getVerifier(config, 'access').verify(accessToken);
+        const response = await getCognitoClient(config.region).send(new GetUserCommand({ AccessToken: accessToken }));
+
+        return userFromCognitoAttributes(accessPayload.sub, response.UserAttributes);
+    } catch (error) {
+        if (error instanceof HTTPException) throw error;
+
+        throw new HTTPException(401, { message: 'Unauthorized' });
+    }
+};
+
+export const updateUserProfileFromCookies = async (
+    context: Parameters<typeof getCookie>[0],
+    request: UpdateProfileRequest
+) => {
+    const accessToken = getCookie(context, cookieNames.accessToken);
+
+    if (!accessToken) {
+        throw new HTTPException(401, { message: 'Unauthorized' });
+    }
+
+    const config = getCognitoConfig();
+
+    try {
+        await getVerifier(config, 'access').verify(accessToken);
+
+        await getCognitoClient(config.region).send(
+            new UpdateUserAttributesCommand({
+                AccessToken: accessToken,
+                UserAttributes: [
+                    { Name: 'given_name', Value: request.firstName },
+                    { Name: 'family_name', Value: request.lastName },
+                    { Name: 'custom:hourlyWage', Value: String(request.hourlyWage) },
+                ],
+            })
+        );
+
+        return readUserProfileFromCookies(context);
+    } catch (error) {
+        if (error instanceof HTTPException) throw error;
+
+        throw friendlyCognitoError(error) ?? error;
     }
 };
 

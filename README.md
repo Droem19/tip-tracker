@@ -116,6 +116,7 @@ The auth Hono app lives in `api/src/lambdas/auth.ts` and exposes:
 - `POST /auth/confirm-forgot-password`
 - `POST /auth/logout`
 - `GET /me`
+- `PUT /me`
 
 The daily-entry Hono app lives in `api/src/lambdas/daily-entry.ts` and exposes:
 
@@ -130,7 +131,7 @@ The UI uses Hono's typed client from `hono/client` for auth calls and shared API
 
 The `/app` and `/reporting` UI routes are protected by the auth provider. If `/me` cannot resolve a signed-in user, the user is routed back to `/`.
 
-Authenticated pages use a shared app layout with the navbar, main content area, footer, and placeholder Profile/Preferences modals. The Profile and Preferences modals are UI-only for now; persistence for profile fields, preferences, hourly rate, theme, calendar view, and reminders still needs to be wired up.
+Authenticated pages use a shared app layout with the navbar, main content area, footer, a Cognito-backed Profile modal, and a placeholder Preferences modal. Persistence for preferences, theme, calendar view, and reminders still needs to be wired up.
 
 This template uses self-signup with a user-chosen password and email verification. It does not use Cognito admin invitations, temporary passwords, or `NEW_PASSWORD_REQUIRED` challenge handling.
 

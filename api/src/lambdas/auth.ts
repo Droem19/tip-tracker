@@ -23,6 +23,7 @@ import {
     emailPasswordValidator,
     emailValidator,
     signUpValidator,
+    updateProfileValidator,
 } from '../contracts/validators';
 import { corsMiddleware, errorHandler } from '../lib/api-helpers';
 import {
@@ -31,8 +32,9 @@ import {
     friendlyCognitoError,
     getCognitoClient,
     getCognitoConfig,
-    readUserFromCookies,
+    readUserProfileFromCookies,
     setAuthenticationResultCookies,
+    updateUserProfileFromCookies,
 } from '../lib/cognito';
 
 export const app = new Hono();
@@ -266,9 +268,15 @@ const routes = app
         return context.json<MessageResponse>({ message: 'Signed out.' });
     })
     .get('/me', async (context) => {
-        const user = await readUserFromCookies(context);
+        const user = await readUserProfileFromCookies(context);
 
         return context.json<MeResponse>({ user });
+    })
+    .put('/me', updateProfileValidator, async (context) => {
+        const request = context.req.valid('json');
+        const user = await updateUserProfileFromCookies(context, request);
+
+        return context.json<AuthResponse>({ user });
     });
 
 export type AuthApp = typeof routes;
@@ -283,6 +291,7 @@ export type {
     MessageResponse,
     SignUpRequest,
     SignUpResponse,
+    UpdateProfileRequest,
 } from '../contracts/types';
 
 export const handler = handle(app);

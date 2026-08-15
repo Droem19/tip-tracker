@@ -2,6 +2,7 @@ import { type SyntheticEvent, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router';
 
 import { useAuth } from '../auth/auth-context';
+import { formatCurrencyAmount, parseCurrencyAmount, sanitizeCurrencyAmountInput } from '../lib/currency';
 
 export function SignUpPage() {
     const { signUp, user } = useAuth();
@@ -16,8 +17,8 @@ export function SignUpPage() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const hourlyWageValue = Number(hourlyWage);
-    const hasValidHourlyWage = hourlyWage.trim() !== '' && Number.isFinite(hourlyWageValue) && hourlyWageValue >= 0;
+    const hourlyWageValue = parseCurrencyAmount(hourlyWage);
+    const hasValidHourlyWage = hourlyWageValue !== null;
     const hasValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     const shouldShowEmailError = email.length > 0 && !hasValidEmail;
     const passwordRequirements = [
@@ -133,13 +134,12 @@ export function SignUpPage() {
                                 <input
                                     className="h-11 w-full rounded-md border border-zinc-300 bg-white px-3 pl-7 text-base outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-700/10"
                                     inputMode="decimal"
-                                    min="0"
                                     name="hourlyWage"
-                                    step="0.01"
-                                    type="number"
+                                    type="text"
                                     value={hourlyWage}
+                                    onBlur={() => setHourlyWage(formatCurrencyAmount(hourlyWage))}
                                     onChange={(event) => {
-                                        setHourlyWage(event.target.value);
+                                        setHourlyWage(sanitizeCurrencyAmountInput(event.target.value));
                                         setError(null);
                                     }}
                                 />
