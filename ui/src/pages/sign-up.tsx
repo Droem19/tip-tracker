@@ -13,6 +13,16 @@ export function SignUpPage() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const hasValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const shouldShowEmailError = email.length > 0 && !hasValidEmail;
+    const passwordRequirements = [
+        { label: 'Uppercase', isMet: /[A-Z]/.test(password) },
+        { label: 'Lowercase', isMet: /[a-z]/.test(password) },
+        { label: 'Number', isMet: /\d/.test(password) },
+        { label: 'Special character', isMet: /[^A-Za-z0-9]/.test(password) },
+        { label: '8+ characters', isMet: password.length >= 8 },
+    ];
+    const hasValidPassword = passwordRequirements.every((requirement) => requirement.isMet);
 
     if (user) return <Navigate to="/app" replace />;
 
@@ -20,6 +30,18 @@ export function SignUpPage() {
         event.preventDefault();
         setError(null);
         setIsSubmitting(true);
+
+        if (!hasValidEmail) {
+            setError('Enter a valid email address.');
+            setIsSubmitting(false);
+            return;
+        }
+
+        if (!hasValidPassword) {
+            setError('Password does not meet all requirements.');
+            setIsSubmitting(false);
+            return;
+        }
 
         if (password !== confirmPassword) {
             setError('Passwords do not match.');
@@ -46,7 +68,7 @@ export function SignUpPage() {
                 <div className="mt-5 rounded-lg border border-zinc-200 bg-white px-6 py-5 shadow-sm">
                     <h1 className="text-center text-xl font-semibold tracking-tight">Create Account</h1>
 
-                    <form className="mt-5 space-y-5" onSubmit={handleSubmit}>
+                    <form className="mt-5 space-y-5" noValidate onSubmit={handleSubmit}>
                         <label className="block text-sm font-medium text-zinc-700">
                             Email
                             <input
@@ -55,9 +77,15 @@ export function SignUpPage() {
                                 name="email"
                                 type="email"
                                 value={email}
-                                onChange={(event) => setEmail(event.target.value)}
+                                onChange={(event) => {
+                                    setEmail(event.target.value);
+                                    setError(null);
+                                }}
                             />
                         </label>
+                        {shouldShowEmailError ? (
+                            <p className="-mt-2 text-xs font-medium text-red-700">A valid email address is required.</p>
+                        ) : null}
 
                         <div>
                             <label className="block text-sm font-medium text-zinc-700" htmlFor="password">
@@ -71,7 +99,10 @@ export function SignUpPage() {
                                     name="password"
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
-                                    onChange={(event) => setPassword(event.target.value)}
+                                    onChange={(event) => {
+                                        setPassword(event.target.value);
+                                        setError(null);
+                                    }}
                                 />
                                 <button
                                     className="absolute right-1.5 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-950 focus:outline-none focus:ring-4 focus:ring-teal-700/10"
@@ -110,6 +141,32 @@ export function SignUpPage() {
                                     )}
                                 </button>
                             </div>
+                            <ul
+                                className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-xs font-medium"
+                                aria-label="Password requirements"
+                            >
+                                {passwordRequirements.map((requirement) => (
+                                    <li
+                                        className={
+                                            requirement.isMet
+                                                ? 'flex items-center gap-2 text-emerald-700'
+                                                : 'flex items-center gap-2 text-zinc-500'
+                                        }
+                                        key={requirement.label}
+                                        aria-label={`${requirement.label}: ${requirement.isMet ? 'met' : 'not met'}`}
+                                    >
+                                        <span
+                                            className={
+                                                requirement.isMet
+                                                    ? 'h-2 w-2 rounded-full bg-emerald-600'
+                                                    : 'h-2 w-2 rounded-full bg-zinc-300'
+                                            }
+                                            aria-hidden="true"
+                                        />
+                                        {requirement.label}
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
 
                         <div>
@@ -124,7 +181,10 @@ export function SignUpPage() {
                                     name="confirmPassword"
                                     type={showConfirmPassword ? 'text' : 'password'}
                                     value={confirmPassword}
-                                    onChange={(event) => setConfirmPassword(event.target.value)}
+                                    onChange={(event) => {
+                                        setConfirmPassword(event.target.value);
+                                        setError(null);
+                                    }}
                                 />
                                 <button
                                     className="absolute right-1.5 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-950 focus:outline-none focus:ring-4 focus:ring-teal-700/10"
@@ -172,7 +232,7 @@ export function SignUpPage() {
                             disabled={isSubmitting}
                             type="submit"
                         >
-                            {isSubmitting ? 'Creating account...' : 'Create account'}
+                            {isSubmitting ? 'Creating Account...' : 'Create Account'}
                         </button>
                     </form>
 
