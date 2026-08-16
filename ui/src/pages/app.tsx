@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { type DailyTipEntry, dailyEntryApi, type SaveDailyTipEntryRequest } from '../auth/api';
 import { useAuth } from '../auth/auth-context';
@@ -6,7 +6,7 @@ import { AppLayout } from '../components/app-layout';
 import { DailyIncomeModal } from '../components/daily-income-modal';
 import { StatCard } from '../components/stat-card';
 import { TipCalendar } from '../components/tip-calendar';
-import { formatLocalDateKey, getMonthDateRange } from '../lib/local-date';
+import { formatLocalDateKey, getMonthDateRange, getWeekDateRange } from '../lib/local-date';
 
 const currencyFormatter = new Intl.NumberFormat(undefined, {
     style: 'currency',
@@ -22,7 +22,7 @@ const percentFormatter = new Intl.NumberFormat(undefined, {
 const today = new Date();
 const ESTIMATED_PAYROLL_TAX_RATE = 0.2;
 
-const getInitialDisplayedMonth = () => new Date(today.getFullYear(), today.getMonth(), 1);
+const getInitialDisplayedDate = () => new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
 const mapEntriesByDate = (entries: DailyTipEntry[]) =>
     entries.reduce<Record<string, DailyTipEntry>>((entriesByDate, entry) => {
@@ -56,15 +56,25 @@ const getSummaryStats = (entriesByDate: Record<string, DailyTipEntry>, hourlyWag
 
 export function AppPage() {
     const { user } = useAuth();
-    const [displayedMonth, setDisplayedMonth] = useState(getInitialDisplayedMonth);
+    const [displayedDate, setDisplayedDate] = useState(getInitialDisplayedDate);
     const [entriesByDate, setEntriesByDate] = useState<Record<string, DailyTipEntry>>({});
     const [isEntriesLoading, setIsEntriesLoading] = useState(false);
     const [entriesError, setEntriesError] = useState<string | null>(null);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+    const defaultView = user?.defaultView ?? 'monthly';
+    const previousDefaultView = useRef(defaultView);
+
+    useEffect(() => {
+        if (previousDefaultView.current === defaultView) return;
+
+        previousDefaultView.current = defaultView;
+        setDisplayedDate(getInitialDisplayedDate());
+    }, [defaultView]);
 
     useEffect(() => {
         let isCurrentRequest = true;
-        const { startDate, endDate } = getMonthDateRange(displayedMonth);
+        const { startDate, endDate } =
+            defaultView === 'weekly' ? getWeekDateRange(displayedDate) : getMonthDateRange(displayedDate);
 
         setIsEntriesLoading(true);
         setEntriesError(null);
@@ -87,7 +97,7 @@ export function AppPage() {
         return () => {
             isCurrentRequest = false;
         };
-    }, [displayedMonth]);
+    }, [defaultView, displayedDate]);
 
     const selectedDateKey = selectedDate ? formatLocalDateKey(selectedDate) : null;
     const selectedEntry = selectedDateKey ? entriesByDate[selectedDateKey] : undefined;
@@ -127,12 +137,13 @@ export function AppPage() {
                 </div>
 
                 <TipCalendar
-                    displayedMonth={displayedMonth}
+                    displayedDate={displayedDate}
                     entriesByDate={entriesByDate}
                     error={entriesError}
                     isLoading={isEntriesLoading}
+                    viewMode={defaultView}
                     onDayClick={setSelectedDate}
-                    onMonthChange={setDisplayedMonth}
+                    onDateChange={setDisplayedDate}
                 />
             </section>
 
