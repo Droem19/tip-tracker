@@ -50,6 +50,8 @@ export class APIStack extends cdk.Stack {
             },
             customAttributes: {
                 hourlyWage: new cognito.NumberAttribute({ mutable: true, min: 0 }),
+                themePreference: new cognito.StringAttribute({ mutable: true, minLen: 4, maxLen: 6 }),
+                defaultView: new cognito.StringAttribute({ mutable: true, minLen: 6, maxLen: 7 }),
             },
             passwordPolicy: {
                 minLength: 8,
@@ -95,14 +97,14 @@ export class APIStack extends cdk.Stack {
                     givenName: true,
                     familyName: true,
                 })
-                .withCustomAttributes('hourlyWage'),
+                .withCustomAttributes('hourlyWage', 'themePreference', 'defaultView'),
             writeAttributes: new cognito.ClientAttributes()
                 .withStandardAttributes({
                     email: true,
                     givenName: true,
                     familyName: true,
                 })
-                .withCustomAttributes('hourlyWage'),
+                .withCustomAttributes('hourlyWage', 'themePreference', 'defaultView'),
         });
 
         this.dailyTipEntriesTable = new dynamodb.Table(this, 'DailyTipEntries', {

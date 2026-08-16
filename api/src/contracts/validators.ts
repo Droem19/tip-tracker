@@ -2,14 +2,19 @@ import { validator } from 'hono/validator';
 
 import type {
     ConfirmForgotPasswordRequest,
+    DefaultViewPreference,
     EmailCodeRequest,
     EmailPasswordRequest,
     EmailRequest,
     MessageResponse,
     SaveDailyTipEntryRequest,
     SignUpRequest,
+    ThemePreference,
     UpdateProfileRequest,
 } from './types';
+
+const themePreferences = ['light', 'dark', 'system'] as const satisfies readonly ThemePreference[];
+const defaultViewPreferences = ['weekly', 'monthly'] as const satisfies readonly DefaultViewPreference[];
 
 const readStringField = (body: unknown, fieldName: string) => {
     if (!body || typeof body !== 'object' || !(fieldName in body)) return undefined;
@@ -25,6 +30,12 @@ const readFiniteNonNegativeNumberField = (body: unknown, fieldName: string) => {
     const value = (body as Record<string, unknown>)[fieldName];
 
     return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : undefined;
+};
+
+const readEnumField = <Value extends string>(body: unknown, fieldName: string, options: readonly Value[]) => {
+    const value = readStringField(body, fieldName);
+
+    return value && options.includes(value as Value) ? (value as Value) : undefined;
 };
 
 export const isValidDateOnlyString = (value: unknown): value is string => {
@@ -77,12 +88,26 @@ export const updateProfileValidator = validator('json', (body, context) => {
     const firstName = readStringField(body, 'firstName');
     const lastName = readStringField(body, 'lastName');
     const hourlyWage = readFiniteNonNegativeNumberField(body, 'hourlyWage');
+    const themePreference = readEnumField(body, 'themePreference', themePreferences);
+    const defaultView = readEnumField(body, 'defaultView', defaultViewPreferences);
 
-    if (!firstName || !lastName || hourlyWage === undefined) {
-        return context.json<MessageResponse>({ message: 'First name, last name, and hourly wage are required.' }, 400);
+    if (
+        firstName === undefined &&
+        lastName === undefined &&
+        hourlyWage === undefined &&
+        themePreference === undefined &&
+        defaultView === undefined
+    ) {
+        return context.json<MessageResponse>({ message: 'At least one profile field is required.' }, 400);
     }
 
-    return { firstName, lastName, hourlyWage } satisfies UpdateProfileRequest;
+    return {
+        ...(firstName !== undefined ? { firstName } : {}),
+        ...(lastName !== undefined ? { lastName } : {}),
+        ...(hourlyWage !== undefined ? { hourlyWage } : {}),
+        ...(themePreference !== undefined ? { themePreference } : {}),
+        ...(defaultView !== undefined ? { defaultView } : {}),
+    } satisfies UpdateProfileRequest;
 });
 
 export const emailCodeValidator = validator('json', (body, context) => {

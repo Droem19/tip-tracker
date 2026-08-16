@@ -5,6 +5,7 @@ export type {
     DailyTipEntriesResponse,
     DailyTipEntry,
     DailyTipEntryResponse,
+    DefaultViewPreference,
     EmailCodeRequest,
     EmailPasswordRequest,
     EmailRequest,
@@ -13,6 +14,7 @@ export type {
     SaveDailyTipEntryRequest,
     SignUpRequest,
     SignUpResponse,
+    ThemePreference,
     UpdateProfileRequest,
 } from './contracts/types';
 export type { AuthApp } from './lambdas/auth';

@@ -62,6 +62,8 @@ const routes = app
                         { Name: 'given_name', Value: firstName },
                         { Name: 'family_name', Value: lastName },
                         { Name: 'custom:hourlyWage', Value: String(hourlyWage) },
+                        { Name: 'custom:themePreference', Value: 'system' },
+                        { Name: 'custom:defaultView', Value: 'monthly' },
                     ],
                 })
             );
@@ -284,6 +286,7 @@ export type {
     AuthResponse,
     AuthUser,
     ConfirmForgotPasswordRequest,
+    DefaultViewPreference,
     EmailCodeRequest,
     EmailPasswordRequest,
     EmailRequest,
@@ -291,6 +294,7 @@ export type {
     MessageResponse,
     SignUpRequest,
     SignUpResponse,
+    ThemePreference,
     UpdateProfileRequest,
 } from '../contracts/types';
 

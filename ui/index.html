@@ -5,6 +5,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="icon" type="image/png" href="/small-logo.png?v=4">
         <title>Tip Tracker</title>
+        <script>
+        const storedTheme = window.localStorage.getItem('tip-tracker-theme-preference');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : prefersDark ? 'dark' : 'light';
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme;
+        </script>
     </head>
     <body>
         <div id="root"></div>

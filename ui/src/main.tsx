@@ -10,6 +10,7 @@ import { NotFoundPage } from './pages/not-found';
 import { ReportingPage } from './pages/reporting';
 import { SignUpPage } from './pages/sign-up';
 import { VerifyEmailPage } from './pages/verify-email';
+import { ThemeProvider } from './theme/theme-context';
 
 import './index.css';
 
@@ -20,29 +21,31 @@ createRoot(rootElement).render(
     <StrictMode>
         <BrowserRouter>
             <AuthProvider>
-                <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/signup" element={<SignUpPage />} />
-                    <Route path="/verify" element={<VerifyEmailPage />} />
-                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                    <Route
-                        path="/app"
-                        element={
-                            <RequireAuth>
-                                <AppPage />
-                            </RequireAuth>
-                        }
-                    />
-                    <Route
-                        path="/reporting"
-                        element={
-                            <RequireAuth>
-                                <ReportingPage />
-                            </RequireAuth>
-                        }
-                    />
-                    <Route path="*" element={<NotFoundPage />} />
-                </Routes>
+                <ThemeProvider>
+                    <Routes>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/signup" element={<SignUpPage />} />
+                        <Route path="/verify" element={<VerifyEmailPage />} />
+                        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                        <Route
+                            path="/app"
+                            element={
+                                <RequireAuth>
+                                    <AppPage />
+                                </RequireAuth>
+                            }
+                        />
+                        <Route
+                            path="/reporting"
+                            element={
+                                <RequireAuth>
+                                    <ReportingPage />
+                                </RequireAuth>
+                            }
+                        />
+                        <Route path="*" element={<NotFoundPage />} />
+                    </Routes>
+                </ThemeProvider>
             </AuthProvider>
         </BrowserRouter>
     </StrictMode>

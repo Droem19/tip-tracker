@@ -1,3 +1,7 @@
+export type ThemePreference = 'light' | 'dark' | 'system';
+
+export type DefaultViewPreference = 'weekly' | 'monthly';
+
 export type AuthUser = {
     sub: string;
     email: string;
@@ -6,6 +10,8 @@ export type AuthUser = {
     givenName?: string;
     familyName?: string;
     hourlyWage?: number;
+    themePreference?: ThemePreference;
+    defaultView?: DefaultViewPreference;
 };
 
 export type AuthResponse = {
@@ -57,9 +63,11 @@ export type SignUpRequest = EmailPasswordRequest & {
 };
 
 export type UpdateProfileRequest = {
-    firstName: string;
-    lastName: string;
-    hourlyWage: number;
+    firstName?: string;
+    lastName?: string;
+    hourlyWage?: number;
+    themePreference?: ThemePreference;
+    defaultView?: DefaultViewPreference;
 };
 
 export type EmailCodeRequest = {

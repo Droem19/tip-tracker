@@ -1,37 +1,59 @@
 import { type FormEvent, useState } from 'react';
 
 import { AppModal } from './app-modal';
+import type { DefaultViewPreference, ThemePreference } from '../auth/api';
+import { useAuth } from '../auth/auth-context';
+import { useTheme } from '../theme/theme-context';
+
+const themeOptions = ['light', 'dark', 'system'] as const satisfies readonly ThemePreference[];
+const defaultViewOptions = ['weekly', 'monthly'] as const satisfies readonly DefaultViewPreference[];
 
 export function PreferencesModal({ onClose }: { onClose: () => void }) {
-    const [theme, setTheme] = useState('light');
-    const [defaultView, setDefaultView] = useState('monthly');
-    const [emailReminders, setEmailReminders] = useState('off');
+    const { updateProfile, user } = useAuth();
+    const { setThemePreference, themePreference } = useTheme();
+    const [theme, setTheme] = useState<ThemePreference>(user?.themePreference ?? themePreference);
+    const [defaultView, setDefaultView] = useState<DefaultViewPreference>(user?.defaultView ?? 'monthly');
+    const [error, setError] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
 
-    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        onClose();
+        setError('');
+        setIsSaving(true);
+
+        try {
+            await updateProfile({ themePreference: theme, defaultView });
+            setThemePreference(theme);
+            onClose();
+        } catch (submitError) {
+            setError(submitError instanceof Error ? submitError.message : 'Unable to update preferences.');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
         <AppModal
             title="Preferences"
-            description="Choose how Tip Tracker should feel once preferences are wired up."
+            description="Choose how Tip Tracker should feel across devices."
+            showCloseButton={false}
             onClose={onClose}
         >
             <form className="space-y-6" onSubmit={handleSubmit}>
                 <fieldset>
-                    <legend className="text-sm font-semibold text-zinc-700">Theme</legend>
-                    <div className="mt-3 grid grid-cols-2 overflow-hidden rounded-md border border-zinc-300 bg-white p-1">
-                        {['light', 'dark'].map((option) => (
+                    <legend className="text-sm font-semibold text-[var(--color-text-muted)]">Theme</legend>
+                    <div className="mt-3 grid grid-cols-3 overflow-hidden rounded-md border border-[var(--color-border-strong)] bg-[var(--color-field-bg)] p-1">
+                        {themeOptions.map((option) => (
                             <button
                                 className={[
-                                    'h-9 rounded text-sm font-semibold capitalize transition focus:outline-none focus:ring-4 focus:ring-teal-700/10',
+                                    'h-9 rounded text-sm font-semibold capitalize transition focus:outline-none focus:ring-4 focus:ring-[#293453]/15',
                                     theme === option
-                                        ? 'bg-teal-700 text-white shadow-sm'
-                                        : 'text-zinc-600 hover:bg-zinc-100',
+                                        ? 'bg-[var(--color-primary-action)] text-white shadow-sm'
+                                        : 'text-[var(--color-text-muted)] hover:bg-[var(--color-hover)]',
                                 ].join(' ')}
                                 key={option}
                                 type="button"
+                                disabled={isSaving}
                                 onClick={() => setTheme(option)}
                             >
                                 {option}
@@ -41,18 +63,21 @@ export function PreferencesModal({ onClose }: { onClose: () => void }) {
                 </fieldset>
 
                 <fieldset>
-                    <legend className="text-sm font-semibold text-zinc-700">Default home/calendar view</legend>
-                    <div className="mt-3 grid grid-cols-2 overflow-hidden rounded-md border border-zinc-300 bg-white p-1">
-                        {['weekly', 'monthly'].map((option) => (
+                    <legend className="text-sm font-semibold text-[var(--color-text-muted)]">
+                        Default home/calendar view
+                    </legend>
+                    <div className="mt-3 grid grid-cols-2 overflow-hidden rounded-md border border-[var(--color-border-strong)] bg-[var(--color-field-bg)] p-1">
+                        {defaultViewOptions.map((option) => (
                             <button
                                 className={[
-                                    'h-9 rounded text-sm font-semibold capitalize transition focus:outline-none focus:ring-4 focus:ring-teal-700/10',
+                                    'h-9 rounded text-sm font-semibold capitalize transition focus:outline-none focus:ring-4 focus:ring-[#293453]/15',
                                     defaultView === option
-                                        ? 'bg-teal-700 text-white shadow-sm'
-                                        : 'text-zinc-600 hover:bg-zinc-100',
+                                        ? 'bg-[var(--color-primary-action)] text-white shadow-sm'
+                                        : 'text-[var(--color-text-muted)] hover:bg-[var(--color-hover)]',
                                 ].join(' ')}
                                 key={option}
                                 type="button"
+                                disabled={isSaving}
                                 onClick={() => setDefaultView(option)}
                             >
                                 {option}
@@ -61,44 +86,27 @@ export function PreferencesModal({ onClose }: { onClose: () => void }) {
                     </div>
                 </fieldset>
 
-                <fieldset>
-                    <legend className="text-sm font-semibold text-zinc-700">Email reminders</legend>
-                    <div className="mt-3 grid grid-cols-2 overflow-hidden rounded-md border border-zinc-300 bg-white p-1">
-                        {['on', 'off'].map((option) => (
-                            <button
-                                className={[
-                                    'h-9 rounded text-sm font-semibold capitalize transition focus:outline-none focus:ring-4 focus:ring-teal-700/10',
-                                    emailReminders === option
-                                        ? 'bg-teal-700 text-white shadow-sm'
-                                        : 'text-zinc-600 hover:bg-zinc-100',
-                                ].join(' ')}
-                                key={option}
-                                type="button"
-                                onClick={() => setEmailReminders(option)}
-                            >
-                                {option}
-                            </button>
-                        ))}
+                {error ? (
+                    <div className="rounded-lg border border-[var(--color-danger-border)] bg-[var(--color-danger-surface)] px-4 py-3 text-sm leading-6 text-[var(--color-danger-text)]">
+                        {error}
                     </div>
-                </fieldset>
+                ) : null}
 
-                <div className="rounded-lg border border-teal-700/15 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-900">
-                    Preferences are placeholder-only for now. Save Changes will close this modal without persisting.
-                </div>
-
-                <div className="flex flex-col-reverse gap-3 border-t border-zinc-200 pt-5 sm:flex-row sm:justify-end">
+                <div className="flex flex-col-reverse gap-3 border-t border-[var(--color-border)] pt-5 sm:flex-row sm:justify-between">
                     <button
-                        className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-100 focus:outline-none focus:ring-4 focus:ring-teal-700/10"
+                        className="inline-flex h-10 items-center justify-center rounded-md border border-[var(--color-border-strong)] bg-[var(--color-field-bg)] px-4 text-sm font-semibold text-[var(--color-text-muted)] transition hover:bg-[var(--color-hover)] focus:outline-none focus:ring-4 focus:ring-teal-700/10"
                         type="button"
+                        disabled={isSaving}
                         onClick={onClose}
                     >
                         Cancel
                     </button>
                     <button
                         className="inline-flex h-10 items-center justify-center rounded-md bg-[#293453] px-4 text-sm font-semibold text-white transition hover:bg-[#222b45] focus:outline-none focus:ring-4 focus:ring-[#293453]/15"
+                        disabled={isSaving}
                         type="submit"
                     >
-                        Save Changes
+                        {isSaving ? 'Saving...' : 'Save Changes'}
                     </button>
                 </div>
             </form>

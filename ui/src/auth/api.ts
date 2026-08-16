@@ -5,11 +5,13 @@ import type {
     DailyTipEntriesResponse,
     DailyTipEntry,
     DailyTipEntryResponse,
+    DefaultViewPreference,
     MeResponse,
     MessageResponse,
     SaveDailyTipEntryRequest,
     SignUpRequest,
     SignUpResponse,
+    ThemePreference,
     UpdateProfileRequest,
 } from 'api';
 import { hc } from 'hono/client';
@@ -140,4 +142,12 @@ export const dailyEntryApi = {
     },
 };
 
-export type { AuthUser, DailyTipEntry, SaveDailyTipEntryRequest, SignUpRequest, UpdateProfileRequest };
+export type {
+    AuthUser,
+    DailyTipEntry,
+    DefaultViewPreference,
+    SaveDailyTipEntryRequest,
+    SignUpRequest,
+    ThemePreference,
+    UpdateProfileRequest,
+};

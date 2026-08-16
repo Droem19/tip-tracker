@@ -16,7 +16,13 @@ import { getCookie, setCookie } from 'hono/cookie';
 import { HTTPException } from 'hono/http-exception';
 
 import { readEnv } from './api-helpers';
-import type { AuthUser, CognitoConfig, UpdateProfileRequest } from '../contracts/types';
+import type {
+    AuthUser,
+    CognitoConfig,
+    DefaultViewPreference,
+    ThemePreference,
+    UpdateProfileRequest,
+} from '../contracts/types';
 
 export const cookieNames = {
     accessToken: 'access_token',
@@ -101,6 +107,18 @@ const setAuthCookie = (context: Parameters<typeof setCookie>[0], name: string, v
 const readUserAttribute = (attributes: AttributeType[] | undefined, name: string) =>
     attributes?.find((attribute) => attribute.Name === name)?.Value?.trim();
 
+const parseThemePreference = (value: string | undefined): ThemePreference | undefined => {
+    if (value === 'light' || value === 'dark' || value === 'system') return value;
+
+    return undefined;
+};
+
+const parseDefaultView = (value: string | undefined): DefaultViewPreference | undefined => {
+    if (value === 'weekly' || value === 'monthly') return value;
+
+    return undefined;
+};
+
 const userFromCognitoAttributes = (fallbackSub: string, attributes: AttributeType[] | undefined): AuthUser => {
     const sub = readUserAttribute(attributes, 'sub') || fallbackSub;
     const email = readUserAttribute(attributes, 'email');
@@ -109,6 +127,8 @@ const userFromCognitoAttributes = (fallbackSub: string, attributes: AttributeTyp
     const familyName = readUserAttribute(attributes, 'family_name');
     const hourlyWageText = readUserAttribute(attributes, 'custom:hourlyWage');
     const hourlyWage = hourlyWageText === undefined ? undefined : Number(hourlyWageText);
+    const themePreference = parseThemePreference(readUserAttribute(attributes, 'custom:themePreference'));
+    const defaultView = parseDefaultView(readUserAttribute(attributes, 'custom:defaultView'));
 
     if (!sub || !email) {
         throw new HTTPException(401, { message: 'Unauthorized' });
@@ -122,6 +142,8 @@ const userFromCognitoAttributes = (fallbackSub: string, attributes: AttributeTyp
         ...(givenName ? { givenName } : {}),
         ...(familyName ? { familyName } : {}),
         ...(Number.isFinite(hourlyWage) ? { hourlyWage } : {}),
+        ...(themePreference ? { themePreference } : {}),
+        ...(defaultView ? { defaultView } : {}),
     };
 };
 
@@ -142,6 +164,12 @@ const userFromTokens = async (accessToken: string, idToken: string): Promise<Aut
     const hourlyWageText =
         typeof idPayload['custom:hourlyWage'] === 'string' ? idPayload['custom:hourlyWage'] : undefined;
     const hourlyWage = hourlyWageText === undefined ? undefined : Number(hourlyWageText);
+    const themePreference = parseThemePreference(
+        typeof idPayload['custom:themePreference'] === 'string' ? idPayload['custom:themePreference'] : undefined
+    );
+    const defaultView = parseDefaultView(
+        typeof idPayload['custom:defaultView'] === 'string' ? idPayload['custom:defaultView'] : undefined
+    );
 
     if (!accessPayload.sub || !email) {
         throw new HTTPException(401, { message: 'Unauthorized' });
@@ -155,6 +183,8 @@ const userFromTokens = async (accessToken: string, idToken: string): Promise<Aut
         ...(givenName ? { givenName } : {}),
         ...(familyName ? { familyName } : {}),
         ...(Number.isFinite(hourlyWage) ? { hourlyWage } : {}),
+        ...(themePreference ? { themePreference } : {}),
+        ...(defaultView ? { defaultView } : {}),
     };
 };
 
@@ -229,15 +259,24 @@ export const updateUserProfileFromCookies = async (
 
     try {
         await getVerifier(config, 'access').verify(accessToken);
+        const userAttributes: AttributeType[] = [];
+
+        if (request.firstName !== undefined) userAttributes.push({ Name: 'given_name', Value: request.firstName });
+        if (request.lastName !== undefined) userAttributes.push({ Name: 'family_name', Value: request.lastName });
+        if (request.hourlyWage !== undefined) {
+            userAttributes.push({ Name: 'custom:hourlyWage', Value: String(request.hourlyWage) });
+        }
+        if (request.themePreference !== undefined) {
+            userAttributes.push({ Name: 'custom:themePreference', Value: request.themePreference });
+        }
+        if (request.defaultView !== undefined) {
+            userAttributes.push({ Name: 'custom:defaultView', Value: request.defaultView });
+        }
 
         await getCognitoClient(config.region).send(
             new UpdateUserAttributesCommand({
                 AccessToken: accessToken,
-                UserAttributes: [
-                    { Name: 'given_name', Value: request.firstName },
-                    { Name: 'family_name', Value: request.lastName },
-                    { Name: 'custom:hourlyWage', Value: String(request.hourlyWage) },
-                ],
+                UserAttributes: userAttributes,
             })
         );
 

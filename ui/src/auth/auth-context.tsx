@@ -104,8 +104,8 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 
     if (!user && !hasCheckedSession) {
         return (
-            <main className="grid min-h-svh place-items-center bg-stone-50 px-6 py-10 text-zinc-950">
-                <p className="text-sm font-medium text-zinc-500">Checking your session...</p>
+            <main className="grid min-h-svh place-items-center bg-[var(--color-app-bg)] px-6 py-10 text-[var(--color-text)]">
+                <p className="text-sm font-medium text-[var(--color-text-soft)]">Checking your session...</p>
             </main>
         );
     }

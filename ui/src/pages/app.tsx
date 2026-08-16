@@ -50,7 +50,7 @@ const getSummaryStats = (entriesByDate: Record<string, DailyTipEntry>, hourlyWag
     return [
         { title: 'Total Tips', value: currencyFormatter.format(totals.tipsEarned) },
         { title: 'Average Tip %', value: percentFormatter.format(tipPercent) },
-        { title: 'Estimated Take-Home / Hour', value: currencyFormatter.format(averageHourly) },
+        { title: 'Est. Take-Home / Hour', value: currencyFormatter.format(averageHourly) },
     ];
 };
 

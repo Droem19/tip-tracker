@@ -13,7 +13,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     const [activeModal, setActiveModal] = useState<'preferences' | 'profile' | null>(null);
 
     return (
-        <div className="flex min-h-svh flex-col bg-stone-50 text-zinc-950">
+        <div className="flex min-h-svh flex-col bg-[var(--color-app-bg)] text-[var(--color-text)]">
             <AppNavbar
                 onPreferencesSelect={() => setActiveModal('preferences')}
                 onProfileSelect={() => setActiveModal('profile')}

@@ -85,7 +85,7 @@ export function AppNavbar({ onPreferencesSelect, onProfileSelect }: AppNavbarPro
     const firstName = getDisplayFirstName(user);
 
     return (
-        <header className="border-b border-zinc-200 bg-white shadow-sm">
+        <header className="border-b border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm">
             <nav className="mx-auto flex h-20 w-full max-w-6xl items-center gap-3 px-4 sm:px-6" aria-label="Main">
                 <Link
                     className="flex h-14 w-40 shrink-0 items-center sm:w-48"
@@ -101,8 +101,8 @@ export function AppNavbar({ onPreferencesSelect, onProfileSelect }: AppNavbarPro
                             [
                                 'inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-semibold transition',
                                 isActive
-                                    ? 'bg-teal-50 text-teal-800 ring-1 ring-teal-700/15'
-                                    : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950',
+                                    ? 'bg-[var(--color-accent-surface)] text-[var(--color-accent-text)] ring-1 ring-teal-700/15'
+                                    : 'text-[var(--color-text-muted)] hover:bg-[var(--color-hover)] hover:text-[var(--color-text)]',
                             ].join(' ')
                         }
                         to="/reporting"
@@ -113,7 +113,7 @@ export function AppNavbar({ onPreferencesSelect, onProfileSelect }: AppNavbarPro
 
                 <div className="relative shrink-0" ref={menuRef}>
                     <button
-                        className="inline-flex h-9 items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 text-sm font-semibold text-zinc-800 transition hover:border-zinc-400 hover:bg-zinc-100 focus:outline-none focus:ring-4 focus:ring-teal-700/10"
+                        className="inline-flex h-9 items-center gap-2 rounded-md border border-[var(--color-border-strong)] bg-[var(--color-field-bg)] px-3 text-sm font-semibold text-[var(--color-text)] transition hover:bg-[var(--color-hover)] focus:outline-none focus:ring-4 focus:ring-teal-700/10"
                         type="button"
                         aria-expanded={isMenuOpen}
                         aria-haspopup="menu"
@@ -131,11 +131,11 @@ export function AppNavbar({ onPreferencesSelect, onProfileSelect }: AppNavbarPro
 
                     {isMenuOpen ? (
                         <div
-                            className="absolute right-0 z-10 mt-2 w-40 overflow-hidden rounded-lg border border-zinc-200 bg-white py-1 shadow-lg"
+                            className="absolute right-0 z-10 mt-2 w-40 overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] py-1 shadow-lg"
                             role="menu"
                         >
                             <button
-                                className="block w-full px-4 py-2 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 hover:text-zinc-950 focus:bg-zinc-100 focus:text-zinc-950 focus:outline-none"
+                                className="block w-full px-4 py-2 text-left text-sm font-medium text-[var(--color-text-muted)] transition hover:bg-[var(--color-hover)] hover:text-[var(--color-text)] focus:bg-[var(--color-hover)] focus:text-[var(--color-text)] focus:outline-none"
                                 type="button"
                                 role="menuitem"
                                 onClick={handleProfileClick}
@@ -143,7 +143,7 @@ export function AppNavbar({ onPreferencesSelect, onProfileSelect }: AppNavbarPro
                                 Profile
                             </button>
                             <button
-                                className="block w-full px-4 py-2 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 hover:text-zinc-950 focus:bg-zinc-100 focus:text-zinc-950 focus:outline-none"
+                                className="block w-full px-4 py-2 text-left text-sm font-medium text-[var(--color-text-muted)] transition hover:bg-[var(--color-hover)] hover:text-[var(--color-text)] focus:bg-[var(--color-hover)] focus:text-[var(--color-text)] focus:outline-none"
                                 type="button"
                                 role="menuitem"
                                 onClick={handlePreferencesClick}
@@ -151,7 +151,7 @@ export function AppNavbar({ onPreferencesSelect, onProfileSelect }: AppNavbarPro
                                 Preferences
                             </button>
                             <button
-                                className="block w-full px-4 py-2 text-left text-sm font-medium text-red-700 transition hover:bg-red-50 hover:text-red-800 focus:bg-red-50 focus:text-red-800 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+                                className="block w-full px-4 py-2 text-left text-sm font-medium text-[var(--color-danger-text)] transition hover:bg-[var(--color-danger-surface)] focus:bg-[var(--color-danger-surface)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
                                 disabled={isSigningOut}
                                 type="button"
                                 role="menuitem"

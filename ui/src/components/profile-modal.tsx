@@ -74,6 +74,7 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
         <AppModal
             title="Profile"
             description="Update the profile details Tip Tracker will use across the app."
+            showCloseButton={false}
             onClose={onClose}
         >
             <form className="space-y-5" onSubmit={handleSubmit}>
@@ -130,7 +131,7 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
                     </div>
                 ) : null}
 
-                <div className="flex flex-col-reverse gap-3 border-t border-zinc-200 pt-5 sm:flex-row sm:justify-end">
+                <div className="flex flex-col-reverse gap-3 border-t border-zinc-200 pt-5 sm:flex-row sm:justify-between">
                     <button
                         className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-100 focus:outline-none focus:ring-4 focus:ring-teal-700/10"
                         type="button"
