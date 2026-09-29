@@ -1,106 +1,79 @@
 # Tip Tracker
 
-Tip Tracker is a React app for tracking tip income, with Cognito-backed login, persisted daily income entries, a typed Hono API, and AWS infrastructure managed with CDK. The API owns auth and stores Cognito tokens in HTTP-only cookies, while the UI uses `/me` to protect authenticated app routes.
+Tip Tracker is a full-stack application for tracking tip income, managing daily earnings, and viewing income reports. Built with React and TypeScript, it features AWS Cognito-backed authentication, persisted daily income entries, a typed Hono API, and AWS infrastructure managed with CDK.
+
+## Live Website
+**[https://www.tip-tracker.derek-dev.com](https://www.tip-tracker.derek-dev.com)**
+
+<img src="ui/public/tip-tracker-preview.png" alt="Tip Tracker website preview" width="600" />
 
 ## Tech Stack
 
-- TypeScript
-- React
-- Vite
-- Tailwind
-- Hono
-- AWS CDK
-- Biome
+- **Frontend:** React, TypeScript, Vite, Tailwind CSS
+- **Backend:** Hono, AWS Lambda, API Gateway
+- **Infrastructure:** AWS CDK, S3, CloudFront, Route 53
+- **Authentication + Database:** Amazon Cognito, DynamoDB
+- **CI/CD + Tooling:** GitHub Actions, pnpm, Biome
 
 ## Repo Structure
 
-- `ui` - Vite React app
-- `ui/src/pages` - Route-level pages for login, sign-up, forgot password, app, reporting, and not found states
-- `ui/src/components` - Shared app shell components, including the authenticated navbar, footer, modals, and summary cards
-- `ui/src/auth` - Client-side auth provider and typed API helpers
-- `api` - Hono serverless API
-- `api/src/lambdas` - Lambda entry points and route wiring
-- `api/src/contracts` - API request/response types and validators
-- `api/src/lib` - Reusable API helpers, Cognito utilities, and DynamoDB data helpers
-- `infra` - CDK app and stacks for hosting the UI, Cognito, HTTP API, and Lambda
-- `.github/workflows/deploy.yml` - Production deploy workflow for pushes to `main` and manual dispatches
-
-## Getting Started (Local Development)
-
-- Node.js: `24.12.0`
-- pnpm: `10.28.2`
-- AWS CLI configured for deployments
-- AWS SSO access for the `DRoemhildt19` profile used by the current deploy scripts
+- `ui` - React application built with Vite
+- `ui/src/pages` - Application pages and routing
+- `ui/src/components` - Reusable UI components
+- `ui/src/auth` - Authentication provider and typed API client
+- `api` - Serverless Hono API
+- `api/src/lambdas` - Lambda entry points and route handlers
+- `api/src/contracts` - Shared API types and validators
+- `api/src/lib` - Authentication and database utilities
+- `infra` - AWS CDK infrastructure
+- `.github/workflows/deploy.yml` - Automated deployment workflow
 
 ## Local Development
 
-Install dependencies from the repo root:
+**Prerequisites**
 
-```bash
-pnpm install
-```
+- Node.js `24.12.0`
+- pnpm `10.28.2`
+- AWS CLI and configured credentials for accessing deployed resources
 
-Run the local UI dev server:
+From the repository root:
 
-```bash
-pnpm run local-ui
-```
+- `pnpm install` - Install dependencies
+- `pnpm run local-ui` - Start the Vite development server
+- `pnpm run local-api` - Start the Hono API
+- `pnpm run local` - Start both UI and API
 
-Run the local API dev server:
-
-```bash
-pnpm run local-api
-```
-
-Run the UI and API together:
-
-```bash
-pnpm run local
-```
-
-Local defaults:
-
-- UI: `http://localhost:5173`
-- API: `http://localhost:8787`
-- The UI uses `VITE_API_URL` when set, otherwise it calls the local API URL.
-
-For local development, point the API at a real Cognito user pool before running `pnpm run local-api`. The local API automatically loads `api/.env` when it exists:
+The local API automatically loads `api/.env` when present. Create it from the provided template:
 
 ```powershell
 Copy-Item api/.env.example api/.env
 ```
 
-Then fill in `USER_POOL_ID`, `USER_POOL_CLIENT_ID`, and `USER_POOL_REGION` in `api/.env`. You can get those values from the CDK outputs after deploying the API stack.
+Configure the following environment variables:
 
-Daily-entry CRUD also needs `DAILY_TIP_ENTRIES_TABLE_NAME` and AWS credentials that can read and write the table. The deployed Lambda receives the table name and IAM permissions from CDK automatically; local development must provide them through your environment.
+- `USER_POOL_ID`
+- `USER_POOL_CLIENT_ID`
+- `USER_POOL_REGION`
+- `DAILY_TIP_ENTRIES_TABLE_NAME`
 
-Running locally still utilizes the deployed DynamoDB table, so you need to be authenticated with:
+Cognito configuration can be obtained from the CDK outputs after deploying the API stack.
 
-```powershell
-pnpm run sso
-```
+Local development uses the deployed DynamoDB table and requires AWS credentials with read/write access. Unlike the deployed Lambda, which receives its configuration and IAM permissions through CDK, local development requires these to be configured separately.
 
-The API sets HTTP-only cookies for Cognito access, ID, and refresh tokens. The UI does not store auth tokens in `localStorage`.
+Authenticate with AWS SSO before running the local API: `pnpm run sso`
 
-## Quality Checks
+**Local URLs**
 
-Run all package typechecks:
+- UI: `http://localhost:5173`
+- API: `http://localhost:8787`
 
-```bash
-pnpm run typecheck
-```
+## Validation
 
-Apply Biome fixes:
+From the repository root:
 
-```bash
-pnpm run format
-```
-
-Build every package with a build script:
-
-```bash
-pnpm run build
-```
+- `pnpm run typecheck` - Run all package typechecks
+- `pnpm run format` - Apply Biome formatting and fixes
+- `pnpm run build` - Build all packages
 
 ## API
 
@@ -127,13 +100,15 @@ The daily-entry Hono app lives in `api/src/lambdas/daily-entry.ts` and exposes:
 
 Daily entries are keyed by authenticated Cognito user and date. The frontend never sends `userId`; the API derives it from the signed-in user's HTTP-only Cognito cookies. The request body for `PUT /daily-entry/{date}` contains only `tipsEarned`, `hoursWorked`, and `totalSales`.
 
+The API stores Cognito access, ID, and refresh tokens in HTTP-only cookies. The UI does not store authentication tokens in localStorage.
+
 The UI uses Hono's typed client from `hono/client` for auth calls and shared API response/request types from the `api` workspace package. Authenticated API requests send cookies with each request and retry once through `/auth/refresh` when an authenticated request returns `401`.
 
 The `/app` and `/reporting` UI routes are protected by the auth provider. If `/me` cannot resolve a signed-in user, the user is routed back to `/`.
 
-Authenticated pages use a shared app layout with the navbar, main content area, footer, a Cognito-backed Profile modal, and a placeholder Preferences modal. Persistence for preferences, theme, calendar view, and reminders still needs to be wired up.
+Authenticated pages use a shared app layout with a navbar, footer, and Cognito-backed Profile and Preferences modals.
 
-This template uses self-signup with a user-chosen password and email verification. It does not use Cognito admin invitations, temporary passwords, or `NEW_PASSWORD_REQUIRED` challenge handling.
+Authentication supports self-signup with user-defined passwords and email verification through Amazon Cognito.
 
 ## Infrastructure
 
@@ -144,9 +119,9 @@ The CDK app lives in `infra` and defines two stacks:
 
 CDK context in `infra/cdk.json` controls the hosted domain:
 
-- `rootDomain` - Route53 hosted zone domain
-- `hostedZoneId` - Route53 hosted zone ID
-- `siteSubdomain` - Subdomain deployed by this template; leave empty to deploy at the root domain
+- `rootDomain` - Route 53 hosted zone domain
+- `hostedZoneId` - Route 53 hosted zone ID
+- `siteSubdomain` - Subdomain deployed by this project; leave empty to deploy at the root domain
 
 The UI stack deploys the built UI from `ui/dist` to `tip-tracker.derek-dev.com` by default.
 
@@ -155,9 +130,9 @@ The UI stack creates:
 - Private S3 bucket for static site assets
 - CloudFront distribution with Origin Access Control
 - CloudFront proxy behaviors for `/auth/*`, `/daily-entry/*`, `/daily-entries`, `/me`, and `/health` so the deployed UI calls the API through the same site origin
-- CloudFront Function SPA routing for extensionless UI paths like `/verify`, without rewriting API error responses
+- CloudFront Function SPA routing for extensionless UI paths like `/verify`
 - ACM certificate for the primary domain and `www` domain
-- Route53 A and AAAA alias records for both domains
+- Route 53 A and AAAA alias records for both domains
 - Bucket deployment with CloudFront invalidation
 
 The API stack creates:
@@ -170,40 +145,23 @@ The API stack creates:
 - DynamoDB table for daily tip entries with `userId` as the partition key and `date` as the sort key
 - API Gateway route integrations for auth and daily-entry routes
 
-## Deploying the app
+## Deployment
 
-Log in with AWS SSO:
+### Automated (GitHub Actions)
 
-```bash
-pnpm run sso
-```
+The workflow runs on pushes to `main` and supports manual dispatches.
 
-Preview the stack:
+- Installs Node.js and pnpm
+- Installs dependencies using `pnpm install --frozen-lockfile`
+- Assumes the AWS IAM role configured in `AWS_DEPLOY_ROLE_ARN`
+- Executes `pnpm run github-action-deploy`
+- Deploys to AWS `us-east-1`
 
-```bash
-pnpm run diff
-```
+### Manual (AWS SSO)
 
-Synthesize the stacks:
+For local deployments, authenticate with AWS SSO and deploy using:
 
-```bash
-pnpm run synth
-```
-
-Deploy the stack:
-
-```bash
-pnpm run deploy
-```
-
-## GitHub Actions Deploy
-
-The deploy workflow runs on pushes to the `main` branch and can also be started manually from GitHub Actions.
-
-The workflow:
-
-- Installs pnpm and Node.js
-- Installs dependencies with `pnpm install --frozen-lockfile`
-- Assumes the AWS role from GitHub's `AWS_DEPLOY_ROLE_ARN` secret
-- Runs `pnpm run github-action-deploy`
-- Deploys to `us-east-1`
+- `pnpm run sso` - Authenticate with AWS SSO
+- `pnpm run diff` - Preview infrastructure changes
+- `pnpm run synth` - Synthesize the CDK stacks
+- `pnpm run deploy` - Deploy the CDK stacks
