@@ -29,6 +29,10 @@ const isSameDay = (date: Date, comparisonDate: Date) =>
     date.getMonth() === comparisonDate.getMonth() &&
     date.getDate() === comparisonDate.getDate();
 
+const isPastDay = (date: Date, comparisonDate: Date) =>
+    new Date(date.getFullYear(), date.getMonth(), date.getDate()) <
+    new Date(comparisonDate.getFullYear(), comparisonDate.getMonth(), comparisonDate.getDate());
+
 const getMonthCalendarCells = (displayedDate: Date): CalendarCell[] => {
     const year = displayedDate.getFullYear();
     const month = displayedDate.getMonth();
@@ -193,7 +197,7 @@ export function TipCalendar({
 
     return (
         <section className="overflow-visible rounded-xl border border-zinc-200 bg-white shadow-sm">
-            <div className="border-b border-zinc-200 bg-zinc-50 px-4 py-4 sm:px-6">
+            <div className="rounded-t-xl border-b border-zinc-200 bg-zinc-50 px-4 py-4 sm:px-6">
                 <div className="flex items-center justify-between gap-3">
                     <button
                         className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-zinc-300 bg-white text-zinc-600 transition hover:border-zinc-400 hover:bg-zinc-100 hover:text-zinc-950 focus:outline-none focus:ring-4 focus:ring-teal-700/10"
@@ -237,7 +241,7 @@ export function TipCalendar({
                                                 className={[
                                                     'h-10 rounded-md text-sm font-semibold uppercase transition focus:outline-none focus:ring-4 focus:ring-teal-700/10',
                                                     viewMode === 'monthly' && isSelectedMonth
-                                                        ? 'bg-teal-700 text-white shadow-sm'
+                                                        ? 'bg-[var(--color-primary-action)] text-white shadow-sm'
                                                         : viewMode === 'weekly' && isDraftMonth
                                                           ? 'bg-[var(--color-primary-action)] text-white shadow-sm'
                                                           : 'bg-zinc-50 text-zinc-700 hover:bg-zinc-100 hover:text-zinc-950',
@@ -376,6 +380,7 @@ export function TipCalendar({
                             {calendarCells.map((cell) => {
                                 const dateKey = formatLocalDateKey(cell.date);
                                 const entry = entriesByDate[dateKey];
+                                const isMissingPastEntry = !entry && isPastDay(cell.date, today);
 
                                 return cell.isCurrentMonth ? (
                                     <button
@@ -391,8 +396,29 @@ export function TipCalendar({
                                     >
                                         <span>{cell.date.getDate()}</span>
                                         {entry ? (
-                                            <span className="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-bold text-teal-700 ring-1 ring-teal-700/10">
+                                            <span className="mt-2 rounded-full bg-teal-50 px-2 py-0.5 text-xs font-bold text-teal-700 ring-1 ring-teal-700/10">
                                                 {formatTipAmount(entry.tipsEarned)}
+                                            </span>
+                                        ) : null}
+                                        {isMissingPastEntry ? (
+                                            <span
+                                                className="mt-2 inline-flex items-center justify-center rounded-full bg-red-50 px-3 py-1 text-red-600 ring-1 ring-red-700/10"
+                                                aria-label="Missing daily input"
+                                                role="img"
+                                            >
+                                                <svg
+                                                    aria-hidden="true"
+                                                    className="h-3.5 w-3.5"
+                                                    viewBox="0 0 16 16"
+                                                    fill="none"
+                                                >
+                                                    <path
+                                                        d="M4.5 4.5 11.5 11.5M11.5 4.5 4.5 11.5"
+                                                        stroke="currentColor"
+                                                        strokeLinecap="round"
+                                                        strokeWidth="2"
+                                                    />
+                                                </svg>
                                             </span>
                                         ) : null}
                                     </button>
