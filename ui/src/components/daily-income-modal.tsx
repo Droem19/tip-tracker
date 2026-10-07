@@ -152,7 +152,7 @@ export function DailyIncomeModal({ entry, selectedDate, onClose, onDelete, onSav
                                     $
                                 </span>
                                 <input
-                                    className="h-10 w-full rounded-md border border-zinc-300 bg-white px-3 pl-7 text-sm font-medium text-zinc-950 outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-700/10"
+                                    className="h-10 w-full rounded-md border border-zinc-300 bg-white px-3 pl-7 text-sm font-medium text-zinc-950 outline-none transition focus:border-[#293453] focus:ring-4 focus:ring-[#293453]/10"
                                     inputMode="decimal"
                                     min="0"
                                     name="tipsEarned"
@@ -168,7 +168,7 @@ export function DailyIncomeModal({ entry, selectedDate, onClose, onDelete, onSav
                         <label className="block text-sm font-semibold text-zinc-700">
                             Hours Worked
                             <input
-                                className="mt-2 h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm font-medium text-zinc-950 outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-700/10"
+                                className="mt-2 h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm font-medium text-zinc-950 outline-none transition focus:border-[#293453] focus:ring-4 focus:ring-[#293453]/10"
                                 inputMode="decimal"
                                 min="0"
                                 name="hoursWorked"
@@ -187,7 +187,7 @@ export function DailyIncomeModal({ entry, selectedDate, onClose, onDelete, onSav
                                     $
                                 </span>
                                 <input
-                                    className="h-10 w-full rounded-md border border-zinc-300 bg-white px-3 pl-7 text-sm font-medium text-zinc-950 outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-700/10"
+                                    className="h-10 w-full rounded-md border border-zinc-300 bg-white px-3 pl-7 text-sm font-medium text-zinc-950 outline-none transition focus:border-[#293453] focus:ring-4 focus:ring-[#293453]/10"
                                     inputMode="decimal"
                                     min="0"
                                     name="totalSales"
@@ -202,10 +202,10 @@ export function DailyIncomeModal({ entry, selectedDate, onClose, onDelete, onSav
 
                         {error ? <p className="text-sm font-medium text-red-700">{error}</p> : null}
 
-                        {entry ? (
-                            <div className="border-t border-zinc-200 pt-5">
+                        <div className="flex flex-col gap-3 border-t border-zinc-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                            {entry ? (
                                 <button
-                                    className="inline-flex h-10 items-center justify-center rounded-md border border-red-200 bg-white px-4 text-sm font-semibold text-red-700 transition hover:bg-red-50 focus:outline-none focus:ring-4 focus:ring-red-700/10 disabled:cursor-not-allowed disabled:opacity-60"
+                                    className="inline-flex h-10 w-full items-center justify-center rounded-md border border-red-200 bg-white px-4 text-sm font-semibold text-red-700 transition hover:bg-red-50 focus:outline-none focus:ring-4 focus:ring-red-700/10 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                                     disabled={isSaving || isDeleting}
                                     type="button"
                                     onClick={() => {
@@ -215,25 +215,25 @@ export function DailyIncomeModal({ entry, selectedDate, onClose, onDelete, onSav
                                 >
                                     Delete Entry
                                 </button>
-                            </div>
-                        ) : null}
+                            ) : null}
 
-                        <div className="flex flex-col-reverse gap-3 border-t border-zinc-200 pt-5 sm:flex-row sm:justify-end">
-                            <button
-                                className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-100 focus:outline-none focus:ring-4 focus:ring-teal-700/10 disabled:cursor-not-allowed disabled:opacity-60"
-                                disabled={isSaving}
-                                type="button"
-                                onClick={handleClose}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                className="inline-flex h-10 items-center justify-center rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-4 focus:ring-teal-700/15 disabled:cursor-not-allowed disabled:opacity-60"
-                                disabled={isSaving}
-                                type="submit"
-                            >
-                                {isSaving ? 'Saving...' : 'Save'}
-                            </button>
+                            <div className="flex flex-col-reverse gap-3 sm:ml-auto sm:flex-row sm:justify-end">
+                                <button
+                                    className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-100 focus:outline-none focus:ring-4 focus:ring-[#293453]/10 disabled:cursor-not-allowed disabled:opacity-60"
+                                    disabled={isSaving}
+                                    type="button"
+                                    onClick={handleClose}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    className="inline-flex h-10 items-center justify-center rounded-md bg-[#293453] px-4 text-sm font-semibold text-white transition hover:bg-[#222b45] focus:outline-none focus:ring-4 focus:ring-[#293453]/15 disabled:cursor-not-allowed disabled:opacity-60"
+                                    disabled={isSaving}
+                                    type="submit"
+                                >
+                                    {isSaving ? 'Saving...' : 'Save'}
+                                </button>
+                            </div>
                         </div>
                     </>
                 )}
